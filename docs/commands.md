@@ -1,0 +1,400 @@
+# skm 命令参考
+
+> 版本：0.1  
+> 二进制：`skm`
+
+---
+
+## 全局用法
+
+```
+skm <COMMAND> [OPTIONS]
+
+skm --help
+skm --version
+skm <COMMAND> --help
+```
+
+---
+
+## 技能管理
+
+### `skm install`
+
+从注册表或 Git 仓库安装技能。
+
+```
+skm install <NAME> [--link-to <AGENT>]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `<NAME>` | 见下方"支持的 NAME 格式" |
+| `--link-to <AGENT>` | 安装后软链到指定 Agent，填 `all` 链接所有已注册 Agent |
+
+**支持的 NAME 格式**
+
+| 格式 | 说明 | 示例 |
+|------|------|------|
+| `<skill-name>` | 从已配置注册表按名称搜索安装 | `mobile-android-design` |
+| `owner/repo` | GitHub 仓库根目录（自动补全 `https://github.com/`） | `mocikadev/skm-skill` |
+| `owner/repo:subpath` | GitHub 仓库子目录，subpath 可含多级 `/` | `wshobson/agents:mobile-android-design` |
+| `owner/repo:dir/subdir` | GitHub 仓库多级子目录 | `myorg/skills:tools/formatter` |
+| `<git-url>` | 完整 Git URL，安装仓库根目录（支持 https / ssh） | `https://github.com/wshobson/agents.git` |
+| `<git-url>#subpath` | 完整 Git URL + `#` 指定子目录 | `https://github.com/myorg/skills.git#tools/formatter` |
+| GitHub 网页 URL | 直接粘贴 GitHub 页面地址，自动解析仓库和子目录 | `https://github.com/myorg/skills/tree/main/formatter` |
+
+> `owner/repo` 格式固定解析为 GitHub（`github.com`）。  
+> GitLab、Gitee 等平台请使用完整 Git URL 格式。
+
+**示例**
+
+```bash
+# 从注册表安装
+skm install mobile-android-design
+skm install mobile-android-design --link-to opencode
+skm install mobile-android-design --link-to all
+
+# GitHub 简写（仓库根目录）
+skm install mocikadev/skm-skill --link-to all
+
+# GitHub 简写（子目录，单级 / 多级均支持）
+skm install wshobson/agents:mobile-android-design
+skm install myorg/skills:tools/formatter
+
+# 完整 Git URL（仓库根目录）
+skm install https://github.com/wshobson/agents.git --link-to opencode
+skm install git@github.com:wshobson/agents.git
+
+# 完整 Git URL + 子目录（# 分隔）
+skm install https://github.com/myorg/skills.git#tools/formatter
+
+# 直接粘贴 GitHub 网页地址（含 /tree/branch/path）
+skm install https://github.com/myorg/skills/tree/main/tools/formatter
+```
+
+**成功输出**
+
+```
+installed mobile-android-design (mobile-android-design)
+linked to: opencode, shared
+```
+
+---
+
+### `skm uninstall`
+
+卸载技能，移除中央仓库目录及所有 Agent 软链接。
+
+```
+skm uninstall <NAME>
+```
+
+**示例**
+
+```bash
+skm uninstall mobile-android-design
+```
+
+**成功输出**
+
+```
+uninstalled mobile-android-design
+```
+
+---
+
+### `skm search`
+
+在已配置的注册表中搜索技能。
+
+```
+skm search <KEYWORD> [--limit <N>]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `<KEYWORD>` | 搜索关键词 |
+| `--limit <N>` | 最多显示结果数（默认 20） |
+
+**示例**
+
+```bash
+skm search android
+skm search android --limit 5
+```
+
+**输出格式**：`<name>  <安装量>  <描述>`
+
+---
+
+### `skm list`
+
+列出所有已安装技能及其链接状态。
+
+```
+skm list
+```
+
+**输出格式**：`<id>  <displayName>  <链接的Agent列表>`
+
+---
+
+### `skm info`
+
+显示技能详细信息（frontmatter、lock 条目、链接状态）。
+
+```
+skm info <NAME>
+```
+
+**示例**
+
+```bash
+skm info mobile-android-design
+```
+
+---
+
+### `skm update`
+
+更新已安装技能到最新版本（更新前自动创建备份）。
+
+```
+skm update [NAME] [--check]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `NAME` | 技能名称（省略则更新全部） |
+| `--check` | 仅检查是否有更新，不实际执行 |
+
+**示例**
+
+```bash
+skm update
+skm update mobile-android-design
+skm update --check
+skm update --check mobile-android-design
+```
+
+**成功输出**
+
+```
+updated mobile-android-design
+```
+
+---
+
+### `skm link`
+
+为已安装的技能在指定 Agent 目录下创建软链接。
+
+```
+skm link <NAME> <AGENT>
+```
+
+**示例**
+
+```bash
+skm link mobile-android-design opencode
+```
+
+**成功输出**
+
+```
+linked mobile-android-design → opencode
+```
+
+---
+
+### `skm unlink`
+
+移除指定 Agent 目录下的技能软链接（不删除中央仓库）。
+
+```
+skm unlink <NAME> <AGENT>
+```
+
+**示例**
+
+```bash
+skm unlink mobile-android-design opencode
+```
+
+**成功输出**
+
+```
+unlinked mobile-android-design from opencode
+```
+
+---
+
+### `skm relink`
+
+将所有已安装技能重新软链接到 Agent 目录，适用于新装 Agent 后的批量同步。
+
+```
+skm relink [AGENT] [--skill <NAME>] [--force] [--backup] [--dry-run]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `AGENT` | 目标 Agent ID（省略则处理所有已注册 Agent） |
+| `--skill <NAME>` | 仅重新链接指定技能 |
+| `--force` | 覆盖冲突路径（非 skm 管理的软链接或文件） |
+| `--backup` | 覆盖前备份冲突文件（需配合 `--force`） |
+| `--dry-run` | 预览操作，不实际执行 |
+
+**典型场景**
+
+```bash
+skm scan                   # 新检测到 cursor
+skm relink cursor          # 将所有已安装技能链到 ~/.cursor/skills/
+```
+
+**成功输出**
+
+```
+relink 12 linked, 0 conflicts, 1 skipped
+```
+
+冲突警告（默认跳过）：
+```
+warn conflict: mobile-android-design in cursor (skipped, use --force to overwrite)
+```
+
+---
+
+## 注册表管理
+
+### `skm source list`
+
+列出所有配置的技能注册表。
+
+```
+skm source list
+```
+
+### `skm source add`
+
+添加自定义技能注册表。
+
+```
+skm source add <NAME> <URL>
+```
+
+**示例**
+
+```bash
+skm source add my-org https://github.com/my-org/my-skills
+```
+
+### `skm source remove`
+
+移除已配置的注册表。
+
+```
+skm source remove <NAME>
+```
+
+**配置文件**：`~/.agents/sources.toml`
+
+---
+
+## Agent 管理
+
+### `skm scan`
+
+自动检测本机已安装的 AI Agent，将结果写入 `agents.toml`（已存在的条目不覆盖）。
+
+```
+skm scan [--dry-run]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--dry-run` | 仅预览检测结果，不写入配置 |
+
+检测采用四信号机制（任一为真即认为已安装）：
+1. 命令存在于 `PATH`
+2. 配置目录存在（如 `~/.claude/`）
+3. Skills 目录存在（如 `~/.claude/skills/`）
+4. Skills 目录内有技能包
+
+**内置支持的 Agent**：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`
+
+### `skm agent list`
+
+列出所有已注册 Agent 及其安装状态与技能数量。
+
+```
+skm agent list
+```
+
+### `skm agent add`
+
+手动注册自定义 Agent。
+
+```
+skm agent add <ID> <PATH>
+```
+
+**示例**
+
+```bash
+skm agent add my-agent ~/.my-agent/skills
+```
+
+**配置文件**：`~/.agents/agents.toml`
+
+---
+
+## 备份管理
+
+### `skm backup list`
+
+列出指定技能的所有备份快照。
+
+```
+skm backup list <NAME>
+```
+
+**输出格式**：`<snapshot-id>  <创建时间>  <备份路径>`
+
+### `skm backup restore`
+
+从备份快照恢复技能（默认恢复最新快照）。
+
+```
+skm backup restore <NAME> [SNAPSHOT_ID]
+```
+
+**示例**
+
+```bash
+skm backup restore mobile-android-design
+skm backup restore mobile-android-design 1776758731056
+```
+
+### `skm backup delete`
+
+删除指定备份快照。
+
+```
+skm backup delete <NAME> <SNAPSHOT_ID>
+```
+
+**备份目录**：`~/.agents/.skm-backups/<skill-name>/<snapshot-id>/`
+
+---
+
+## 数据目录速查
+
+| 路径 | 用途 |
+|------|------|
+| `~/.agents/skills/` | 中央技能仓库（唯一存储位置） |
+| `~/.agents/.skill-lock.json` | 安装元数据锁文件（与 skilly 共用） |
+| `~/.agents/sources.toml` | 注册表源配置 |
+| `~/.agents/agents.toml` | 已注册 Agent 路径配置 |
+| `~/.agents/.skm-backups/` | 技能备份目录 |

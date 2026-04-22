@@ -59,6 +59,58 @@ help 文本支持中英双语，运行时动态注入（不是静态编译）。
 
 切换命令：`skm config lang zh` / `skm config lang en` / `skm config lang --reset`
 
+## 发布规范
+
+### 产物命名
+
+Release 产物统一使用用户友好格式，**不使用 Rust target triple**：
+
+| 平台 | 产物文件名 |
+|------|-----------|
+| Linux x86_64 | `skm-linux-amd64` |
+| Linux aarch64 | `skm-linux-arm64` |
+| macOS x86_64 | `skm-macos-amd64` |
+| macOS Apple Silicon | `skm-macos-arm64` |
+
+⚠️ **`install.sh` 中的 `detect_target()` 返回值必须与上表一一对应**。  
+修改 `release.yml` 的 `matrix.artifact` 时，必须同步修改 `install.sh`，反之亦然。
+
+### MSRV
+
+当前最低支持 Rust 版本：**1.88**（由 `home` crate 依赖决定）。  
+升级依赖前先确认新的 MSRV，并同步更新 `Cargo.toml` 中的 `rust-version` 和 `ci.yml` 中的 MSRV job。
+
+---
+
+## 仓库配置规范
+
+适用于本 org（`mocikadev`）下所有仓库，新建仓库时参照执行。
+
+### About Description
+
+格式：`中文描述 · English description`（用 ` · ` 分隔，单行）
+
+| 仓库 | description |
+|------|-------------|
+| `mocika-skills-cli` | `AI Agent 技能包本地管理 CLI · Local skill manager for AI Agents` |
+| `skm-skill` | `skm 命令参考技能包 · skm command reference skill for AI Agents` |
+
+### Homepage URL
+
+| 仓库 | homepage |
+|------|----------|
+| `mocika-skills-cli` | `https://github.com/mocikadev/mocika-skills-cli/releases/latest` |
+| `skm-skill` | `https://github.com/mocikadev/mocika-skills-cli` |
+
+### Topics
+
+| 仓库 | topics |
+|------|--------|
+| `mocika-skills-cli` | `ai-agent` `cli` `rust` `skill-manager` `opencode` `claude-code` |
+| `skm-skill` | `ai-agent` `skill` `skm` `opencode` `claude-code` |
+
+---
+
 ## 配套产物
 
 - **skm-skill**：CLI 命令参考 skill，供 AI Agent 学习并代替用户操作 skm。  

@@ -56,7 +56,6 @@ pub fn list_skill_entries() -> Result<Vec<(String, Value)>> {
 }
 
 pub fn upsert_skill_entry(skill_id: &str, entry: Value) -> Result<()> {
-    ensure_exists()?;
     let mut root = read_json()?;
 
     if root.get("skills").is_none() {
@@ -73,7 +72,6 @@ pub fn upsert_skill_entry(skill_id: &str, entry: Value) -> Result<()> {
 }
 
 pub fn remove_skill_entry(skill_id: &str) -> Result<()> {
-    ensure_exists()?;
     let mut root = read_json()?;
     if let Some(skills) = root.get_mut("skills").and_then(Value::as_object_mut) {
         skills.remove(skill_id);
@@ -89,7 +87,13 @@ fn write_json(value: &Value) -> Result<()> {
 
     let tmp = path.with_extension("json.tmp");
     let payload = serde_json::to_string_pretty(value)?;
-    fs::write(&tmp, payload)?;
-    fs::rename(&tmp, &path)?;
-    Ok(())
+    let result = (|| -> Result<()> {
+        fs::write(&tmp, &payload)?;
+        fs::rename(&tmp, &path)?;
+        Ok(())
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(&tmp);
+    }
+    result
 }

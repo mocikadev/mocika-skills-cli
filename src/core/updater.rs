@@ -3,9 +3,13 @@ use reqwest::blocking::Client;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::fs;
+use std::time::Duration;
 
 const REPO: &str = "mocikadev/mocika-skills-cli";
 const GITHUB_API: &str = "https://api.github.com";
+
+const API_TIMEOUT: Duration = Duration::from_secs(30);
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(300);
 
 /// GitHub release metadata returned from the API.
 #[derive(Debug)]
@@ -81,6 +85,7 @@ pub fn check_update() -> Result<Option<ReleaseInfo>> {
 
     let client = Client::builder()
         .user_agent(format!("skm/{}", env!("CARGO_PKG_VERSION")))
+        .timeout(API_TIMEOUT)
         .build()
         .context("failed to build HTTP client")?;
 
@@ -147,6 +152,7 @@ pub fn apply_update(info: &ReleaseInfo) -> Result<String> {
 
     let client = Client::builder()
         .user_agent(format!("skm/{}", env!("CARGO_PKG_VERSION")))
+        .timeout(DOWNLOAD_TIMEOUT)
         .build()
         .context("failed to build HTTP client")?;
 
@@ -220,22 +226,28 @@ pub fn apply_update(info: &ReleaseInfo) -> Result<String> {
         .with_context(|| format!("failed to write temp binary to {}", tmp_path.display()))?;
 
     // 8. Set executable permission (Unix only — Windows not supported)
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let perms = fs::Permissions::from_mode(0o755);
-        fs::set_permissions(&tmp_path, perms)
-            .with_context(|| format!("failed to chmod {}", tmp_path.display()))?;
-    }
-
     // 9. Atomic rename: tmp → exe
-    fs::rename(&tmp_path, &exe_path).with_context(|| {
-        format!(
-            "failed to replace {} with {}",
-            exe_path.display(),
-            tmp_path.display()
-        )
-    })?;
+    let install_result = (|| -> Result<()> {
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let perms = fs::Permissions::from_mode(0o755);
+            fs::set_permissions(&tmp_path, perms)
+                .with_context(|| format!("failed to chmod {}", tmp_path.display()))?;
+        }
+        fs::rename(&tmp_path, &exe_path).with_context(|| {
+            format!(
+                "failed to replace {} with {}",
+                exe_path.display(),
+                tmp_path.display()
+            )
+        })?;
+        Ok(())
+    })();
+    if install_result.is_err() {
+        let _ = fs::remove_file(&tmp_path);
+    }
+    install_result?;
 
     Ok(info.version.clone())
 }

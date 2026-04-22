@@ -1,5 +1,7 @@
 # skm-skill
 
+> 中文 | [English](README.en.md)
+
 AI Agent 技能包，让你的 AI 助手直接操作 `skm` 命令，无需手动执行。
 
 ## 安装

@@ -12,8 +12,24 @@ permissions:
   contents: write
 
 jobs:
+  verify:
+    name: Verify release tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches Cargo.toml version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          CARGO_VERSION="v$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)"
+          if [ "$TAG" != "$CARGO_VERSION" ]; then
+            echo "error: tag '$TAG' does not match Cargo.toml version '$CARGO_VERSION'"
+            exit 1
+          fi
+          echo "OK: $TAG"
+
   build:
     name: Build · ${{ matrix.target }}
+    needs: verify
     strategy:
       fail-fast: false
       matrix:

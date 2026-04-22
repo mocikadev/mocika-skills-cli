@@ -79,15 +79,15 @@ detect_target() {
   case "$os" in
     Linux)
       case "$arch" in
-        x86_64)          echo "x86_64-unknown-linux-musl" ;;
-        aarch64 | arm64) echo "aarch64-unknown-linux-musl" ;;
+        x86_64)          echo "linux-amd64" ;;
+        aarch64 | arm64) echo "linux-arm64" ;;
         *)               die "$(printf "$MSG_UNSUPPORTED_ARCH" "$arch" "Linux")" ;;
       esac
       ;;
     Darwin)
       case "$arch" in
-        x86_64)          echo "x86_64-apple-darwin" ;;
-        arm64)           echo "aarch64-apple-darwin" ;;
+        x86_64)          echo "macos-amd64" ;;
+        arm64)           echo "macos-arm64" ;;
         *)               die "$(printf "$MSG_UNSUPPORTED_ARCH" "$arch" "macOS")" ;;
       esac
       ;;

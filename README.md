@@ -3,6 +3,7 @@
 # skm
 
 [![CI](https://github.com/mocikadev/mocika-skills-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/mocikadev/mocika-skills-cli/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/mocikadev/mocika-skills-cli)](https://github.com/mocikadev/mocika-skills-cli/releases/latest)
 
 AI Agent 技能包本地管理 CLI。统一管理多个 AI Agent 的技能包安装、部署、更新与备份。
 

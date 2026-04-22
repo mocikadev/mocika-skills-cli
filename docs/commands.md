@@ -398,3 +398,56 @@ skm backup delete <NAME> <SNAPSHOT_ID>
 | `~/.agents/sources.toml` | 注册表源配置 |
 | `~/.agents/agents.toml` | 已注册 Agent 路径配置 |
 | `~/.agents/.skm-backups/` | 技能备份目录 |
+
+---
+
+## 配置管理
+
+### `skm config lang`
+
+查看或设置界面显示语言。
+
+```
+skm config lang [CODE|--reset]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `CODE` | 语言代码：`zh`（中文）或 `en`（英文） |
+| `--reset` | 重置为自动检测（从 `$LANG` 环境变量读取） |
+
+**示例**
+
+```bash
+skm config lang          # 查看当前语言设置
+skm config lang zh       # 切换为中文
+skm config lang en       # 切换为英文
+skm config lang --reset  # 重置为随系统语言
+```
+
+**配置文件**：`~/.agents/skm.toml`
+
+---
+
+## 自我升级
+
+### `skm self-update`
+
+将 skm 本身升级到最新版本。
+
+```
+skm self-update [--check]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--check` | 仅检查是否有新版本，不实际升级 |
+
+**示例**
+
+```bash
+skm self-update          # 检查并升级到最新版
+skm self-update --check  # 仅查看是否有可用更新
+```
+
+升级流程：从 GitHub Releases 下载对应平台的预编译二进制，校验 SHA256 后原子替换当前可执行文件。

@@ -61,7 +61,8 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 
 # 路径/系统
-dirs = "5"                  # home_dir / config_dir 跨平台
+dirs   = "5"                  # home_dir / config_dir 跨平台
+which  = "6"                  # PATH 命令检测（Agent 4-signal）
 
 # 输出体验
 indicatif = "0.17"          # 进度条（install / update）
@@ -75,6 +76,9 @@ regex = "1"
 
 # 时间
 chrono = { version = "0.4", features = ["serde"] }
+
+# SHA256 校验（self-update 二进制完整性验证）
+sha2 = "0.10"
 
 [dev-dependencies]
 tempfile   = "3"            # 测试用临时目录
@@ -114,9 +118,10 @@ src/
 │   ├── update.rs        # skm update
 │   ├── list.rs          # skm list / info
 │   ├── source.rs        # skm source add/remove/list
-│   ├── agent.rs         # skm agent list/add
+│   ├── agent_cmd.rs     # skm agent list/add
 │   ├── backup.rs        # skm backup list/restore/delete
-│   └── self_update.rs   # skm self-update（Backlog）
+│   ├── config_cmd.rs    # skm config lang（i18n 语言设置）
+│   └── self_update.rs   # skm self-update
 │
 ├── core/                # 业务逻辑层（纯逻辑，不直接写终端）
 │   ├── mod.rs
@@ -128,7 +133,9 @@ src/
 │   ├── update.rs        # git-based 更新检查与执行
 │   ├── backup.rs        # 快照创建、恢复、清理
 │   ├── config.rs        # sources.toml + agents.toml 结构体与 I/O
-│   └── git.rs           # git 命令封装（clone / pull / rev-parse 等）
+│   ├── git.rs           # git 命令封装（clone / pull / rev-parse 等）
+│   ├── skm_config.rs    # skm.toml 读写（lang 等用户配置）
+│   └── updater.rs       # self-update：GitHub Releases 下载、校验、替换二进制
 │
 ├── models.rs            # 跨层共享数据类型（SkillSummary、AgentStatus 等）
 └── error.rs             # 自定义错误类型（thiserror）
@@ -276,7 +283,6 @@ debug    = true
 #![warn(clippy::style)]
 #![warn(clippy::complexity)]
 #![warn(clippy::perf)]
-#![warn(missing_docs)]
 ```
 
 `.cargo/config.toml`：

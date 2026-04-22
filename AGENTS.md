@@ -6,7 +6,7 @@
 
 **skm** — AI Agent 技能包本地管理 CLI，Rust 编写。  
 仓库：`MocikaSpace/mocika-skills-cli`  
-当前状态：**需求讨论阶段，尚未开始实现**
+当前状态：**Phase 1 主体功能已实现，i18n / help 文本中英双语已完成**
 
 ## 关键约束
 
@@ -23,30 +23,41 @@
 | 文档 | 路径 |
 |------|------|
 | 需求文档 | `docs/requirements.md` |
+| 技术设计 | `docs/design.md` |
+| 命令参考 | `docs/commands.md` |
 | 提交规范 | `~/.config/opencode/docs/process/commit-convention.md` |
 | 全局规则 | `~/.config/opencode/AGENTS.md` |
-
-## 参考工程
-
-- **skilly**（`~/WorkSpace/skilly`）：同生态 GUI 桌面版，Rust 核心层可直接参考
-  - `src-tauri/src/core/agent.rs`：Agent 检测逻辑（4-signal 检测）
-  - `src-tauri/src/core/lock.rs`：锁文件读写（原子 tmp+rename）
-  - `src-tauri/src/core/registry.rs`：Registry API 集成（search / leaderboard / skill content）
-  - `src-tauri/src/core/operations.rs`：安装、更新、备份核心操作
 
 ## 核心设计速查
 
 ```
 skm install <name> [--link-to <agent|all>]   # 安装 + 软链接部署
-skm scan                                      # 检测已安装 Agent → agents.toml
-skm relink [agent]                            # 新装 Agent 后批量补链
-skm update [name]                             # Git-based 更新（自动备份）
-skm search <keyword>                          # 从 skills.sh 搜索
-skm self-update                               # 自我升级（Backlog）
+skm uninstall <name>                          # 卸载技能及所有软链接
+skm search <keyword> [--limit <N>]            # 从 skills.sh 搜索
+skm list                                      # 列出已安装技能及链接状态
+skm info <name>                               # 查看技能详情
+skm update [name] [--check]                   # Git-based 更新（自动备份）
+skm link <name> <agent>                       # 为技能补链到 Agent
+skm unlink <name> <agent>                     # 移除 Agent 的软链接
+skm relink [agent] [--skill <name>] [--force] [--dry-run]  # 批量重新链接
+skm scan [--dry-run]                          # 检测已安装 Agent → agents.toml
+skm source list/add/remove                    # 注册表源管理
+skm agent list/add                            # Agent 列表 / 手动注册
+skm backup list/restore/delete <name>         # 备份快照管理
+skm config lang [code|--reset]                # 查看 / 设置界面语言
+skm self-update [--check]                     # 自我升级（从 GitHub Releases）
 ```
 
 Agent 检测四信号（任一为真即认为已安装）：
 `which <cmd>` || 配置目录存在 || skills目录存在 || skills目录有技能包
+
+## i18n 说明
+
+help 文本支持中英双语，运行时动态注入（不是静态编译）。语言优先级：
+1. `~/.agents/skm.toml` 中的 `lang` 配置
+2. 系统环境变量 `$LANG`（`zh_*` → 中文，其余 → 英文）
+
+切换命令：`skm config lang zh` / `skm config lang en` / `skm config lang --reset`
 
 ## 配套产物
 

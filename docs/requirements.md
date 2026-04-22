@@ -327,7 +327,7 @@ skm update android-cli
 
 ---
 
-## 十一、自我升级（Backlog，主体功能完成后实现）
+## 十一、自我升级
 
 `skm` 自身支持升级命令：
 
@@ -336,8 +336,7 @@ skm self-update          # 检查并升级到最新版
 skm self-update --check  # 仅检查是否有新版本，不升级
 ```
 
-升级实现：从 GitHub Releases 下载最新预编译二进制，替换当前可执行文件。  
-**优先级**：最后实现，不阻塞其他功能。
+升级实现：从 GitHub Releases 下载最新预编译二进制，校验 SHA256 后原子替换当前可执行文件。
 
 ---
 

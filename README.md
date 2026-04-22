@@ -68,14 +68,16 @@ skm install mocikadev/skm-skill --link-to all
 | `skm uninstall <name>` | 卸载技能 |
 | `skm search <keyword>` | 搜索注册表 |
 | `skm list` | 列出已安装技能 |
+| `skm list --outdated` | 只显示有更新可用的技能 |
 | `skm info <name>` | 查看技能详情 |
-| `skm update [name]` | 更新技能 |
+| `skm update [name]` | 更新技能（不带 name 或加 `--all` 更新全部） |
 | `skm link <name> <agent>` | 链接到 Agent |
 | `skm unlink <name> <agent>` | 移除链接 |
 | `skm relink [agent]` | 批量重新链接 |
 | `skm scan` | 检测本机 Agent |
 | `skm agent list` | 列出已注册 Agent |
 | `skm backup list/restore/delete <name>` | 备份管理 |
+| `skm doctor` | 检测环境健康状态，诊断链接/Agent 问题 |
 | `skm source list/add/remove` | 注册表源管理 |
 
 完整文档：[docs/commands.md](docs/commands.md)

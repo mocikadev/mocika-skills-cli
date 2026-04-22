@@ -1,10 +1,23 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use console::style;
+use indicatif::{ProgressBar, ProgressStyle};
 
-use crate::core::skill;
+use crate::core::{skill, update};
 use crate::i18n;
 
-pub fn run() -> Result<()> {
+#[derive(clap::Args)]
+#[command(about = "List all installed skills")]
+pub struct ListArgs {
+    /// Only show skills with available updates
+    #[arg(long)]
+    pub outdated: bool,
+}
+
+pub fn run(args: ListArgs) -> Result<()> {
+    if args.outdated {
+        return run_outdated();
+    }
+
     let skills = skill::scan_skills()?;
     if skills.is_empty() {
         println!(
@@ -31,9 +44,43 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
+fn run_outdated() -> Result<()> {
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.cyan} {msg}")
+            .unwrap_or_else(|_| ProgressStyle::default_spinner()),
+    );
+    spinner.set_message(i18n::t("checking for updates"));
+    spinner.enable_steady_tick(std::time::Duration::from_millis(80));
+
+    let checks = update::check_updates(&[])?;
+    spinner.finish_and_clear();
+
+    let outdated: Vec<_> = checks.into_iter().filter(|c| c.has_update).collect();
+
+    if outdated.is_empty() {
+        println!(
+            "{} {}",
+            style(i18n::t("info")).cyan().bold(),
+            i18n::t("no outdated skills")
+        );
+        return Ok(());
+    }
+
+    for item in outdated {
+        println!(
+            "{}  {}",
+            style(item.skill_id).green(),
+            item.message.unwrap_or_default()
+        );
+    }
+    Ok(())
+}
+
 pub fn run_info(name: &str) -> Result<()> {
     let detail =
-        skill::read_skill_detail(name)?.ok_or_else(|| anyhow!("skill not found: {name}"))?;
+        skill::read_skill_detail(name)?.ok_or_else(|| anyhow::anyhow!("skill not found: {name}"))?;
 
     println!("{}", style(&detail.summary.display_name).green().bold());
     println!("{}: {}", i18n::t("id"), detail.summary.id);

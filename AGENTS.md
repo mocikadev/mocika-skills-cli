@@ -35,8 +35,9 @@ skm install <name> [--link-to <agent|all>]   # 安装 + 软链接部署
 skm uninstall <name>                          # 卸载技能及所有软链接
 skm search <keyword> [--limit <N>]            # 从 skills.sh 搜索
 skm list                                      # 列出已安装技能及链接状态
+skm list --outdated                           # 只显示有更新可用的技能
 skm info <name>                               # 查看技能详情
-skm update [name] [--check]                   # Git-based 更新（自动备份）
+skm update [name] [--all] [--check]           # Git-based 更新（自动备份）
 skm link <name> <agent>                       # 为技能补链到 Agent
 skm unlink <name> <agent>                     # 移除 Agent 的软链接
 skm relink [agent] [--skill <name>] [--force] [--dry-run]  # 批量重新链接
@@ -46,6 +47,7 @@ skm agent list/add                            # Agent 列表 / 手动注册
 skm backup list/restore/delete <name>         # 备份快照管理
 skm config lang [code|--reset]                # 查看 / 设置界面语言
 skm self-update [--check]                     # 自我升级（从 GitHub Releases）
+skm doctor                                    # 检测环境健康状态，诊断链接/Agent 问题
 ```
 
 Agent 检测四信号（任一为真即认为已安装）：

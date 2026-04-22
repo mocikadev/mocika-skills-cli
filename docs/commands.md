@@ -133,7 +133,18 @@ skm search android --limit 5
 列出所有已安装技能及其链接状态。
 
 ```
+skm list [--outdated]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--outdated` | 只显示有可用更新的技能（会发起网络请求） |
+
+**示例**
+
+```bash
 skm list
+skm list --outdated
 ```
 
 **输出格式**：`<id>  <displayName>  <链接的Agent列表>`
@@ -161,27 +172,30 @@ skm info mobile-android-design
 更新已安装技能到最新版本（更新前自动创建备份）。
 
 ```
-skm update [NAME] [--check]
+skm update [NAME] [--all] [--check]
 ```
 
 | 参数 | 说明 |
 |------|------|
-| `NAME` | 技能名称（省略则更新全部） |
+| `NAME` | 技能名称（与 `--all` 互斥） |
+| `--all` | 显式更新全部已安装技能 |
 | `--check` | 仅检查是否有更新，不实际执行 |
 
 **示例**
 
 ```bash
-skm update
-skm update mobile-android-design
-skm update --check
+skm update                          # 更新全部（等同 --all）
+skm update --all                    # 更新全部（显式）
+skm update mobile-android-design    # 更新指定技能
+skm update --check                  # 检查全部更新
 skm update --check mobile-android-design
 ```
 
 **成功输出**
 
 ```
-updated mobile-android-design
+✓ updated mobile-android-design
+updated: 1, failed: 0
 ```
 
 ---
@@ -354,13 +368,15 @@ skm agent add my-agent ~/.my-agent/skills
 
 ### `skm backup list`
 
-列出指定技能的所有备份快照。
+列出备份快照。不指定技能名则列出全部，按技能名分组显示。
 
 ```
-skm backup list <NAME>
+skm backup list [NAME]
 ```
 
-**输出格式**：`<snapshot-id>  <创建时间>  <备份路径>`
+**输出格式**：
+- 无参数：按技能名分组，每行 `<snapshot-id>  <创建时间>`
+- 指定名称：`<snapshot-id>  <创建时间>  <备份路径>`
 
 ### `skm backup restore`
 
@@ -451,3 +467,45 @@ skm self-update --check  # 仅查看是否有可用更新
 ```
 
 升级流程：从 GitHub Releases 下载对应平台的预编译二进制，校验 SHA256 后原子替换当前可执行文件。
+
+---
+
+## 环境诊断
+
+### `skm doctor`
+
+检测环境健康状态，诊断常见问题。
+
+```
+skm doctor
+```
+
+检查项：
+- **环境**：共享技能目录是否存在、锁文件和 agents.toml 是否可读
+- **Agent**：agents.toml 中注册的每个 Agent 是否仍已安装（失效条目提示运行 `skm scan` 清理）
+- **链接**：锁文件中的每个技能在每个注册 Agent 下的链接状态（已链接 / 未链接 / 冲突）
+
+**退出码**：所有检查通过返回 0，存在问题返回 1。
+
+**示例**
+
+```bash
+skm doctor
+```
+
+**示例输出**
+
+```
+Environment
+  ✓  shared skills dir    exists
+  ✓  lock file            readable
+  ✓  agents.toml          readable
+
+Agents (2)
+  ✓  opencode             installed
+  ✗  kiro                 not installed  (run `skm scan` to clean up)
+
+Links (1 issue(s))
+  ✓  rust-skills           opencode    linked
+  ✗  rust-skills           kiro        not linked
+```

@@ -38,7 +38,7 @@ pub fn run() -> Result<()> {
         cli::Commands::Scan(args) => cli::scan::run(args),
         cli::Commands::Relink(args) => cli::relink::run(args),
         cli::Commands::Update(args) => cli::update::run(args),
-        cli::Commands::List => cli::list::run(),
+        cli::Commands::List(args) => cli::list::run(args),
         cli::Commands::Info { name } => cli::list::run_info(&name),
         cli::Commands::Uninstall { name } => cli::install::run_uninstall(&name),
         cli::Commands::Link { name, agent } => cli::install::run_link(&name, &agent),
@@ -48,6 +48,7 @@ pub fn run() -> Result<()> {
         cli::Commands::Backup(cmd) => cli::backup::run(cmd),
         cli::Commands::Config(cmd) => cli::config_cmd::run(cmd),
         cli::Commands::SelfUpdate(args) => cli::self_update::run(args),
+        cli::Commands::Doctor(args) => cli::doctor::run(args),
     }
 }
 
@@ -133,6 +134,7 @@ fn build_i18n_cmd() -> clap::Command {
                 .disable_help_flag(true)
                 .arg(h())
                 .mut_arg("name", |a| pos(a, "arg.update.name"))
+                .mut_arg("all", |a| opt(a, "arg.update.all"))
                 .mut_arg("check", |a| opt(a, "arg.update.check"))
         })
         .mut_subcommand("list", |c| {
@@ -140,6 +142,7 @@ fn build_i18n_cmd() -> clap::Command {
                 .help_template(tmpl())
                 .disable_help_flag(true)
                 .arg(h())
+                .mut_arg("outdated", |a| opt(a, "arg.list.outdated"))
         })
         .mut_subcommand("info", |c| {
             c.about(t("cmd.info"))
@@ -271,5 +274,11 @@ fn build_i18n_cmd() -> clap::Command {
                 .disable_help_flag(true)
                 .arg(h())
                 .mut_arg("check", |a| opt(a, "arg.self-update.check"))
+        })
+        .mut_subcommand("doctor", |c| {
+            c.about(t("cmd.doctor"))
+                .help_template(tmpl())
+                .disable_help_flag(true)
+                .arg(h())
         })
 }

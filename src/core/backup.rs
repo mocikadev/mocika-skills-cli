@@ -7,6 +7,10 @@ pub fn list_backups(skill_id: &str) -> Result<Vec<SkillBackup>> {
     operations::list_skill_backups(skill_id)
 }
 
+pub fn list_all_backups() -> Result<Vec<SkillBackup>> {
+    operations::list_all_backups()
+}
+
 pub fn restore_backup(skill_id: &str, snapshot_id: Option<String>) -> Result<()> {
     operations::restore_skill_backup(skill_id, snapshot_id).map(|_| ())
 }

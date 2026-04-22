@@ -58,11 +58,13 @@ Your AI agent will automatically run the corresponding `skm` commands.
 | Install / uninstall skills | `skm install` / `skm uninstall` |
 | Link / unlink skills | `skm link` / `skm unlink` |
 | List installed skills | `skm list` / `skm info` |
-| Update skills | `skm update` |
+| Show skills with updates | `skm list --outdated` |
+| Update skills | `skm update [--all]` |
 | Re-link all skills | `skm relink` |
 | Detect installed agents | `skm scan` |
 | Manage agent list | `skm agent list / add` |
 | Backup & restore | `skm backup list / restore / delete` |
+| Diagnose environment health | `skm doctor` |
 | Registry source management | `skm source list / add / remove` |
 
 ## Prerequisites

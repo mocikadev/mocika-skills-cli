@@ -54,7 +54,9 @@ pub fn t(key: &str) -> &'static str {
             "no agents registered — run `skm scan` to detect installed agents" => {
                 "no agents registered — run `skm scan` to detect installed agents"
             }
+            "no outdated skills" => "no outdated skills",
             "no backups found for" => "no backups found for",
+            "no backups found" => "no backups found",
             "linked to" => "linked to",
             "id" => "id",
             "path" => "path",
@@ -108,12 +110,13 @@ pub fn t(key: &str) -> &'static str {
             "cmd.backup" => "Manage skill backups",
             "cmd.config" => "Configure skm settings (language, etc.)",
             "cmd.self-update" => "Update skm itself to the latest release",
+            "cmd.doctor" => "Check environment and diagnose common issues",
             "cmd.source.add" => "Add a new skill registry source",
             "cmd.source.remove" => "Remove a registry source by name",
             "cmd.source.list" => "List all configured registry sources",
             "cmd.agent.list" => "List all registered agents and their status",
             "cmd.agent.add" => "Register a custom agent manually",
-            "cmd.backup.list" => "List all backup snapshots for a skill",
+            "cmd.backup.list" => "List backup snapshots (all skills when no name given)",
             "cmd.backup.restore" => "Restore a skill from a backup snapshot",
             "cmd.backup.delete" => "Delete a specific backup snapshot",
             "cmd.config.lang" => "Show or set the UI language",
@@ -129,9 +132,29 @@ pub fn t(key: &str) -> &'static str {
                 "Back up conflicting paths before overwriting (requires --force)"
             }
             "arg.relink.dry-run" => "Show what would be done without making any changes",
-            "arg.update.name" => "Skill name to update (omit to update all)",
+            "arg.update.name" => "Skill name to update (omit or use --all to update all)",
+            "arg.update.all" => "Update all installed skills",
             "arg.update.check" => "Only check for updates, do not apply them",
             "arg.self-update.check" => "Only check for a newer version without downloading",
+            "doctor.env" => "Environment",
+            "doctor.agents" => "Agents",
+            "doctor.links" => "Links",
+            "doctor.shared_dir" => "shared skills dir",
+            "doctor.lock_file" => "lock file",
+            "doctor.agents_toml" => "agents.toml",
+            "doctor.exists" => "exists",
+            "doctor.readable" => "readable",
+            "doctor.missing" => "missing",
+            "doctor.unreadable" => "unreadable",
+            "doctor.installed" => "installed",
+            "doctor.not_installed" => "not installed",
+            "doctor.linked" => "linked",
+            "doctor.not_linked" => "not linked",
+            "doctor.conflict" => "conflict",
+            "doctor.stale_hint" => "run `skm scan` to clean up",
+            "doctor.no_agents" => "no agents registered — run `skm scan` to detect",
+            "doctor.all_ok" => "all checks passed",
+            "doctor.issues" => "issue(s)",
             "arg.info.name" => "Skill name",
             "arg.uninstall.name" => "Skill name",
             "arg.link.name" => "Skill name",
@@ -152,6 +175,7 @@ pub fn t(key: &str) -> &'static str {
             "arg.backup.delete.snapshot-id" => "Snapshot ID to delete",
             "arg.config.lang.lang" => "Language code (en or zh)",
             "arg.config.lang.reset" => "Reset language to auto-detect from environment",
+            "arg.list.outdated" => "Only show skills with available updates",
             _ => "unknown translation key",
         },
         Lang::Zh => match key {
@@ -173,7 +197,9 @@ pub fn t(key: &str) -> &'static str {
             "no agents registered — run `skm scan` to detect installed agents" => {
                 "未注册 Agent — 运行 `skm scan` 检测已安装的 Agent"
             }
+            "no outdated skills" => "所有技能均为最新版本",
             "no backups found for" => "未找到备份：",
+            "no backups found" => "暂无备份快照",
             "linked to" => "已链接到",
             "id" => "ID",
             "path" => "路径",
@@ -227,12 +253,13 @@ pub fn t(key: &str) -> &'static str {
             "cmd.backup" => "管理技能备份",
             "cmd.config" => "配置 skm 设置（语言等）",
             "cmd.self-update" => "升级 skm 到最新版本",
+            "cmd.doctor" => "检测环境并诊断常见问题",
             "cmd.source.add" => "添加新的技能注册表来源",
             "cmd.source.remove" => "按名称移除注册表来源",
             "cmd.source.list" => "列出所有已配置的注册表来源",
             "cmd.agent.list" => "列出所有已注册 Agent 及其状态",
             "cmd.agent.add" => "手动注册自定义 Agent",
-            "cmd.backup.list" => "列出技能的所有备份快照",
+            "cmd.backup.list" => "列出备份快照（不指定技能名则列出全部）",
             "cmd.backup.restore" => "从备份快照恢复技能",
             "cmd.backup.delete" => "删除指定的备份快照",
             "cmd.config.lang" => "查看或设置界面语言",
@@ -246,9 +273,29 @@ pub fn t(key: &str) -> &'static str {
             "arg.relink.force" => "覆盖冲突路径（非 skm 软链接或文件）",
             "arg.relink.backup" => "覆盖前备份冲突路径（需要 --force）",
             "arg.relink.dry-run" => "预览操作，不实际修改",
-            "arg.update.name" => "要更新的技能名（省略则更新全部）",
+            "arg.update.name" => "要更新的技能名（省略或使用 --all 则更新全部）",
+            "arg.update.all" => "更新所有已安装技能",
             "arg.update.check" => "仅检查更新，不执行",
             "arg.self-update.check" => "仅检查新版本，不下载",
+            "doctor.env" => "环境",
+            "doctor.agents" => "Agent",
+            "doctor.links" => "链接",
+            "doctor.shared_dir" => "共享技能目录",
+            "doctor.lock_file" => "锁文件",
+            "doctor.agents_toml" => "agents.toml",
+            "doctor.exists" => "存在",
+            "doctor.readable" => "可读",
+            "doctor.missing" => "缺失",
+            "doctor.unreadable" => "不可读",
+            "doctor.installed" => "已安装",
+            "doctor.not_installed" => "未安装",
+            "doctor.linked" => "已链接",
+            "doctor.not_linked" => "未链接",
+            "doctor.conflict" => "冲突",
+            "doctor.stale_hint" => "运行 `skm scan` 清理",
+            "doctor.no_agents" => "未注册 Agent — 运行 `skm scan` 检测",
+            "doctor.all_ok" => "所有检查通过",
+            "doctor.issues" => "个问题",
             "arg.info.name" => "技能名",
             "arg.uninstall.name" => "技能名",
             "arg.link.name" => "技能名",
@@ -267,6 +314,7 @@ pub fn t(key: &str) -> &'static str {
             "arg.backup.delete.snapshot-id" => "要删除的快照 ID",
             "arg.config.lang.lang" => "语言代码（en 或 zh）",
             "arg.config.lang.reset" => "重置语言为自动检测",
+            "arg.list.outdated" => "只显示有可用更新的技能",
             _ => "未知翻译键",
         },
     }
@@ -380,6 +428,32 @@ pub fn fmt_invalid_lang(value: &str) -> String {
     match *current() {
         Lang::En => format!("unsupported language: {value}. use 'en' or 'zh'"),
         Lang::Zh => format!("不支持的语言：{value}。请使用 en 或 zh"),
+    }
+}
+
+pub fn fmt_doctor_summary(issues: usize) -> String {
+    match *current() {
+        Lang::En => {
+            if issues == 0 {
+                "all checks passed".to_string()
+            } else {
+                format!("{issues} issue(s) found")
+            }
+        }
+        Lang::Zh => {
+            if issues == 0 {
+                "所有检查通过".to_string()
+            } else {
+                format!("发现 {issues} 个问题")
+            }
+        }
+    }
+}
+
+pub fn fmt_update_summary(updated: usize, failed: usize) -> String {
+    match *current() {
+        Lang::En => format!("updated: {updated}, failed: {failed}"),
+        Lang::Zh => format!("已更新：{updated}，失败：{failed}"),
     }
 }
 

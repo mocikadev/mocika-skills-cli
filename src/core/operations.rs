@@ -435,6 +435,31 @@ pub fn update_skill(skill_id: &str) -> Result<SkillSummary> {
     result
 }
 
+pub fn list_all_backups() -> Result<Vec<SkillBackup>> {
+    let root = backup_root_dir()?;
+    let entries = match fs::read_dir(&root) {
+        Ok(entries) => entries,
+        Err(_) => return Ok(Vec::new()),
+    };
+
+    let mut all_backups = Vec::new();
+    for entry in entries {
+        let entry = entry?;
+        if !entry.file_type()?.is_dir() {
+            continue;
+        }
+        let skill_id = entry.file_name().to_string_lossy().to_string();
+        all_backups.extend(list_skill_backups(&skill_id)?);
+    }
+
+    all_backups.sort_by(|a, b| {
+        a.skill_id
+            .cmp(&b.skill_id)
+            .then_with(|| b.snapshot_id.cmp(&a.snapshot_id))
+    });
+    Ok(all_backups)
+}
+
 pub fn list_skill_backups(skill_id: &str) -> Result<Vec<SkillBackup>> {
     let root = backup_skill_dir(skill_id)?;
     let entries = match fs::read_dir(&root) {

@@ -1,6 +1,7 @@
 pub mod agent_cmd;
 pub mod backup;
 pub mod config_cmd;
+pub mod doctor;
 pub mod install;
 pub mod list;
 pub mod relink;
@@ -32,7 +33,7 @@ pub enum Commands {
     /// Update installed skills to latest version
     Update(update::UpdateArgs),
     /// List all installed skills
-    List,
+    List(list::ListArgs),
     /// Show detailed information about a skill
     Info {
         /// Skill name
@@ -71,4 +72,6 @@ pub enum Commands {
     Config(config_cmd::ConfigCommands),
     /// Update skm itself to the latest release
     SelfUpdate(self_update::SelfUpdateArgs),
+    /// Check environment and diagnose common issues
+    Doctor(doctor::DoctorArgs),
 }

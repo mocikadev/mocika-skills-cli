@@ -111,12 +111,13 @@ skm search android --limit 5
 
 输出格式：`<name>  <安装量>  <描述>`
 
-#### `skm list`
+#### `skm list [--outdated]`
 
-列出所有已安装技能及其软链接状态。
+列出所有已安装技能及其软链接状态。加 `--outdated` 只显示有可用更新的技能（会发起网络请求）。
 
 ```bash
 skm list
+skm list --outdated     # 只显示可更新的技能
 ```
 
 #### `skm info <NAME>`
@@ -127,12 +128,13 @@ skm list
 skm info mobile-android-design
 ```
 
-#### `skm update [NAME] [--check]`
+#### `skm update [NAME] [--all] [--check]`
 
-更新技能到最新版本（更新前自动备份）。省略 NAME 则更新全部。
+更新技能到最新版本（更新前自动备份）。省略 NAME 则更新全部；`--all` 是显式全部更新 flag（行为与省略 NAME 相同，但输出末尾显示错误汇总）。
 
 ```bash
-skm update
+skm update                                # 更新全部（隐式）
+skm update --all                          # 更新全部（显式，推荐）
 skm update mobile-android-design
 skm update --check                        # 仅检查，不执行更新
 skm update --check mobile-android-design
@@ -192,7 +194,8 @@ skm agent add my-agent ~/.my-agent/skills  # 手动注册自定义 Agent
 ### 备份管理
 
 ```bash
-skm backup list mobile-android-design                    # 列出所有备份快照
+skm backup list                                          # 列出所有技能的备份快照（按技能分组）
+skm backup list mobile-android-design                    # 列出指定技能的备份快照
 skm backup restore mobile-android-design                 # 恢复最新快照
 skm backup restore mobile-android-design 1776758731056   # 恢复指定快照
 skm backup delete mobile-android-design 1776758731056    # 删除指定快照
@@ -200,7 +203,23 @@ skm backup delete mobile-android-design 1776758731056    # 删除指定快照
 
 备份目录：`~/.agents/.skm-backups/<skill-name>/<snapshot-id>/`
 
-## 常见场景速查
+### 诊断
+
+#### `skm doctor`
+
+检测环境健康状态，诊断三类问题：
+- **ENV**：共享目录、锁文件、agents.toml 是否存在
+- **AGENTS**：已注册 Agent 是否实际安装（可执行文件 / 配置目录存在）
+- **LINKS**：已安装技能在各 Agent 下的软链接是否完整
+
+发现问题时以非零退出码（1）退出，适合在 CI 或初次配置时验证环境。
+
+```bash
+skm doctor
+```
+
+### 自升级
+
 
 | 场景 | 命令 |
 |------|------|
@@ -210,5 +229,6 @@ skm backup delete mobile-android-design 1776758731056    # 删除指定快照
 | 新装了一个 Agent | `skm scan && skm relink <new-agent>` |
 | 查看某技能链接到哪些 Agent | `skm info <name>` |
 | 检查是否有可用更新 | `skm update --check` |
-| 升级技能（自动备份） | `skm update <name>` |
-| 升级出问题，回滚 | `skm backup list <name>` 后 `skm backup restore <name>` |
+| 升级技能（自动备份） | `skm update <name>` 或 `skm update --all` |
+| 升级出问题，回滚 | `skm backup list [name]` 后 `skm backup restore <name>` |
+| 诊断环境 / 链接问题 | `skm doctor` |

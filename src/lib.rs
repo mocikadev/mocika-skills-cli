@@ -239,9 +239,7 @@ fn build_i18n_cmd() -> clap::Command {
                         .disable_help_flag(true)
                         .arg(h())
                         .mut_arg("name", |a| pos(a, "arg.backup.restore.name"))
-                        .mut_arg("snapshot_id", |a| {
-                            pos(a, "arg.backup.restore.snapshot-id")
-                        })
+                        .mut_arg("snapshot_id", |a| pos(a, "arg.backup.restore.snapshot-id"))
                 })
                 .mut_subcommand("delete", |c| {
                     c.about(t("cmd.backup.delete"))
@@ -249,9 +247,7 @@ fn build_i18n_cmd() -> clap::Command {
                         .disable_help_flag(true)
                         .arg(h())
                         .mut_arg("name", |a| pos(a, "arg.backup.delete.name"))
-                        .mut_arg("snapshot_id", |a| {
-                            pos(a, "arg.backup.delete.snapshot-id")
-                        })
+                        .mut_arg("snapshot_id", |a| pos(a, "arg.backup.delete.snapshot-id"))
                 })
         })
         .mut_subcommand("config", |c| {

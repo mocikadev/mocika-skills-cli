@@ -115,7 +115,7 @@ cargo build --release
 # 产物：./target/release/skm
 ```
 
-需要 Rust 1.80+。
+需要 Rust 1.85+。
 
 ## 许可证
 

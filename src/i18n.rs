@@ -124,7 +124,9 @@ pub fn t(key: &str) -> &'static str {
             "arg.relink.agent" => "Target agent ID (omit to relink all agents)",
             "arg.relink.skill" => "Only relink this specific skill",
             "arg.relink.force" => "Overwrite conflicting paths (non-skm symlinks or files)",
-            "arg.relink.backup" => "Back up conflicting paths before overwriting (requires --force)",
+            "arg.relink.backup" => {
+                "Back up conflicting paths before overwriting (requires --force)"
+            }
             "arg.relink.dry-run" => "Show what would be done without making any changes",
             "arg.update.name" => "Skill name to update (omit to update all)",
             "arg.update.check" => "Only check for updates, do not apply them",
@@ -139,7 +141,9 @@ pub fn t(key: &str) -> &'static str {
             "arg.source.add.url" => "Registry URL (https://skills.sh or GitHub repo URL)",
             "arg.source.remove.name" => "Source name to remove",
             "arg.agent.add.id" => "Agent ID (e.g. my-agent)",
-            "arg.agent.add.path" => "Path to the agent's skills directory (e.g. ~/.my-agent/skills)",
+            "arg.agent.add.path" => {
+                "Path to the agent's skills directory (e.g. ~/.my-agent/skills)"
+            }
             "arg.backup.list.name" => "Skill name",
             "arg.backup.restore.name" => "Skill name",
             "arg.backup.restore.snapshot-id" => "Snapshot ID to restore (defaults to latest)",

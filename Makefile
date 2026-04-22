@@ -8,6 +8,7 @@ TARGET_MACOS_X86_64  := x86_64-apple-darwin
 TARGET_MACOS_AARCH64 := aarch64-apple-darwin
 
 CARGO  ?= cargo
+CROSS  ?= cross
 PREFIX ?= $(HOME)/.local
 
 ifeq ($(shell uname -s),Darwin)
@@ -20,7 +21,7 @@ endif
 
 .DEFAULT_GOAL := help
 
-.PHONY: help build release test check fmt clippy clean install \
+.PHONY: help build release test check fmt fmt-check clippy clean install \
         build-linux-x86_64 build-linux-aarch64 \
         build-macos-x86_64 build-macos-aarch64 \
         dist dist-linux dist-macos
@@ -39,7 +40,7 @@ help:
 	@printf "\n"
 	@printf "Cross-compilation (single target)\n"
 	@printf "  build-linux-x86_64  Linux  x86_64  musl  [requires: musl-tools]\n"
-	@printf "  build-linux-aarch64 Linux  aarch64 musl  [requires: aarch64-linux-musl-gcc]\n"
+	@printf "  build-linux-aarch64 Linux  aarch64 musl  [auto: cross > zigbuild > aarch64-linux-musl-gcc]\n"
 	@printf "  build-macos-x86_64  macOS  x86_64        [on macOS: native | on Linux: requires zig + cargo-zigbuild]\n"
 	@printf "  build-macos-aarch64 macOS  aarch64        [on macOS: native | on Linux: requires zig + cargo-zigbuild]\n"
 	@printf "\n"
@@ -75,20 +76,30 @@ clean:
 	rm -rf $(DIST_DIR)
 
 install: release
-	install -Dm755 target/release/$(BINARY) $(PREFIX)/bin/$(BINARY)
+	@mkdir -p $(PREFIX)/bin
+	install -m755 target/release/$(BINARY) $(PREFIX)/bin/$(BINARY)
 	@printf "installed $(PREFIX)/bin/$(BINARY)\n"
 
 build-linux-x86_64:
 	$(call ensure_target,$(TARGET_LINUX_X86_64))
-	$(call require_linker,x86_64-linux-musl-gcc,apt install musl-tools)
+	$(call require_linker,x86_64-linux-musl-gcc,Linux: apt install musl-tools | macOS: brew install FiloSottile/musl-cross/musl-cross)
 	$(CARGO) build --release --target $(TARGET_LINUX_X86_64)
 
 build-linux-aarch64:
 	$(call ensure_target,$(TARGET_LINUX_AARCH64))
-	$(call require_linker,aarch64-linux-musl-gcc,\
-		Download a musl cross-toolchain from https://musl.cc\n\
-		  or: cargo install cargo-zigbuild && make $$@ CARGO=cargo-zigbuild)
-	$(CARGO) build --release --target $(TARGET_LINUX_AARCH64)
+	@if command -v $(CROSS) >/dev/null 2>&1; then \
+		$(CROSS) build --release --target $(TARGET_LINUX_AARCH64); \
+	elif command -v cargo-zigbuild >/dev/null 2>&1 && command -v zig >/dev/null 2>&1; then \
+		cargo zigbuild --release --target $(TARGET_LINUX_AARCH64); \
+	elif command -v aarch64-linux-musl-gcc >/dev/null 2>&1; then \
+		$(CARGO) build --release --target $(TARGET_LINUX_AARCH64); \
+	else \
+		printf "error: no tool found to cross-compile for aarch64 Linux musl\n"; \
+		printf "  Option 1 (recommended): cargo install cross --locked   (requires Docker)\n"; \
+		printf "  Option 2:               install zig + cargo install cargo-zigbuild\n"; \
+		printf "  Option 3:               download musl toolchain from https://musl.cc\n"; \
+		exit 1; \
+	fi
 
 build-macos-x86_64:
 	$(call ensure_target,$(TARGET_MACOS_X86_64))

@@ -21,6 +21,56 @@ ok()    { printf "${GREEN}ok${RESET}    %s\n" "$*"; }
 warn()  { printf "${YELLOW}warn${RESET}  %s\n" "$*"; }
 die()   { printf "${RED}error${RESET} %s\n" "$*" >&2; exit 1; }
 
+# ---------------------------------------------------------------------------
+# i18n：根据 $LANG 环境变量选择语言（zh_* → 中文，其余 → 英文）
+# ---------------------------------------------------------------------------
+case "${LANG:-}" in
+  zh_*)
+    MSG_TITLE="安装 skm — AI Agent 技能包管理器"
+    MSG_PLATFORM="平台    ："
+    MSG_VERSION="版本    ："
+    MSG_INSTALL_DIR="安装目录："
+    MSG_DOWNLOADING="下载中..."
+    MSG_VERIFYING="校验 SHA256..."
+    MSG_CHECKSUM_OK="SHA256 校验通过"
+    MSG_CHECKSUM_SKIP_DL="无法下载 SHA256SUMS.txt，跳过校验。"
+    MSG_CHECKSUM_SKIP_MISSING="SHA256SUMS.txt 中未找到对应条目，跳过校验。"
+    MSG_CHECKSUM_SKIP_CMD="未找到 sha256sum / shasum，跳过校验。"
+    MSG_CHECKSUM_FAIL="SHA256 校验失败！\n  预期: %s\n  实际: %s"
+    MSG_NO_DOWNLOADER="需要 curl 或 wget 之一，但均未找到。"
+    MSG_DOWNLOAD_FAIL="下载失败，请检查网络或版本号是否正确。"
+    MSG_INSTALLED="已安装："
+    MSG_PATH_WARN="%s 不在 \$PATH 中，请将以下内容加入 ~/.bashrc 或 ~/.zshrc："
+    MSG_DONE="完成！"
+    MSG_HINT="运行 %sskm --help%s 开始使用。"
+    MSG_UNSUPPORTED_ARCH="不支持的架构：%s（%s）"
+    MSG_UNSUPPORTED_OS="不支持的操作系统：%s（仅支持 Linux / macOS）"
+    ;;
+  *)
+    MSG_TITLE="Installing skm — AI Agent skill manager"
+    MSG_PLATFORM="Platform   :"
+    MSG_VERSION="Version    :"
+    MSG_INSTALL_DIR="Install dir:"
+    MSG_DOWNLOADING="Downloading..."
+    MSG_VERIFYING="Verifying SHA256..."
+    MSG_CHECKSUM_OK="SHA256 checksum verified"
+    MSG_CHECKSUM_SKIP_DL="Could not download SHA256SUMS.txt, skipping verification."
+    MSG_CHECKSUM_SKIP_MISSING="No matching entry in SHA256SUMS.txt, skipping verification."
+    MSG_CHECKSUM_SKIP_CMD="sha256sum / shasum not found, skipping verification."
+    MSG_CHECKSUM_FAIL="SHA256 mismatch!\n  expected: %s\n  actual:   %s"
+    MSG_NO_DOWNLOADER="curl or wget is required but neither was found."
+    MSG_DOWNLOAD_FAIL="Download failed. Check your network or the version string."
+    MSG_INSTALLED="Installed:"
+    MSG_PATH_WARN="%s is not in \$PATH. Add the following to ~/.bashrc or ~/.zshrc:"
+    MSG_DONE="Done!"
+    MSG_HINT="Run %sskm --help%s to get started."
+    MSG_UNSUPPORTED_ARCH="Unsupported architecture: %s (%s)"
+    MSG_UNSUPPORTED_OS="Unsupported OS: %s (only Linux / macOS are supported)"
+    ;;
+esac
+
+# ---------------------------------------------------------------------------
+
 detect_target() {
   local os arch
   os=$(uname -s)
@@ -31,18 +81,18 @@ detect_target() {
       case "$arch" in
         x86_64)          echo "x86_64-unknown-linux-musl" ;;
         aarch64 | arm64) echo "aarch64-unknown-linux-musl" ;;
-        *)               die "不支持的架构：$arch（Linux）" ;;
+        *)               die "$(printf "$MSG_UNSUPPORTED_ARCH" "$arch" "Linux")" ;;
       esac
       ;;
     Darwin)
       case "$arch" in
         x86_64)          echo "x86_64-apple-darwin" ;;
         arm64)           echo "aarch64-apple-darwin" ;;
-        *)               die "不支持的架构：$arch（macOS）" ;;
+        *)               die "$(printf "$MSG_UNSUPPORTED_ARCH" "$arch" "macOS")" ;;
       esac
       ;;
     *)
-      die "不支持的操作系统：$os（仅支持 Linux / macOS）"
+      die "$(printf "$MSG_UNSUPPORTED_OS" "$os")"
       ;;
   esac
 }
@@ -54,7 +104,7 @@ download() {
   elif command -v wget > /dev/null 2>&1; then
     wget -q --tries=3 "$url" -O "$dest"
   else
-    die "需要 curl 或 wget 之一，但均未找到。"
+    die "$MSG_NO_DOWNLOADER"
   fi
 }
 
@@ -74,10 +124,10 @@ verify_checksum() {
   checksum_url=$(resolve_url "SHA256SUMS.txt")
   checksum_tmp=$(mktemp)
 
-  info "校验 SHA256..."
+  info "$MSG_VERIFYING"
   if ! download "$checksum_url" "$checksum_tmp" 2>/dev/null; then
     rm -f "$checksum_tmp"
-    warn "无法下载 SHA256SUMS.txt，跳过校验。"
+    warn "$MSG_CHECKSUM_SKIP_DL"
     return 0
   fi
 
@@ -85,7 +135,7 @@ verify_checksum() {
   rm -f "$checksum_tmp"
 
   if [ -z "$expected" ]; then
-    warn "SHA256SUMS.txt 中未找到 $BINARY-$target 条目，跳过校验。"
+    warn "$MSG_CHECKSUM_SKIP_MISSING"
     return 0
   fi
 
@@ -94,54 +144,54 @@ verify_checksum() {
   elif command -v shasum >/dev/null 2>&1; then
     actual=$(shasum -a 256 "$binary_path" | awk '{print $1}')
   else
-    warn "未找到 sha256sum / shasum，跳过校验。"
+    warn "$MSG_CHECKSUM_SKIP_CMD"
     return 0
   fi
 
   if [ "$expected" != "$actual" ]; then
-    die "SHA256 校验失败！\n  预期: $expected\n  实际: $actual"
+    die "$(printf "$MSG_CHECKSUM_FAIL" "$expected" "$actual")"
   fi
 
-  ok "SHA256 校验通过"
+  ok "$MSG_CHECKSUM_OK"
 }
 
 main() {
-  printf "\n${BOLD}安装 skm — AI Agent 技能包管理器${RESET}\n\n"
+  printf "\n${BOLD}%s${RESET}\n\n" "$MSG_TITLE"
 
   local target url tmp
   target=$(detect_target)
   url=$(resolve_url "$BINARY-$target")
 
-  info "平台    ：$target"
-  info "版本    ：$VERSION"
-  info "安装目录：$INSTALL_DIR"
+  info "$MSG_PLATFORM $target"
+  info "$MSG_VERSION $VERSION"
+  info "$MSG_INSTALL_DIR $INSTALL_DIR"
   printf "\n"
 
   mkdir -p "$INSTALL_DIR"
 
-  info "下载中..."
+  info "$MSG_DOWNLOADING"
   tmp=$(mktemp)
   # shellcheck disable=SC2064
   trap "rm -f '$tmp'" EXIT
 
-  download "$url" "$tmp" || die "下载失败，请检查网络或版本号是否正确。"
+  download "$url" "$tmp" || die "$MSG_DOWNLOAD_FAIL"
   verify_checksum "$tmp" "$target"
   chmod +x "$tmp"
   mv "$tmp" "$INSTALL_DIR/$BINARY"
 
-  ok "已安装：$INSTALL_DIR/$BINARY"
+  ok "$MSG_INSTALLED $INSTALL_DIR/$BINARY"
 
   if "$INSTALL_DIR/$BINARY" --version >/dev/null 2>&1; then
-    ok "版本    ：$("$INSTALL_DIR/$BINARY" --version 2>&1)"
+    ok "$MSG_VERSION $("$INSTALL_DIR/$BINARY" --version 2>&1)"
   fi
 
   if ! echo ":${PATH}:" | grep -qF ":${INSTALL_DIR}:"; then
     printf "\n"
-    warn "$INSTALL_DIR 不在 \$PATH 中，请将以下内容加入 ~/.bashrc 或 ~/.zshrc："
+    warn "$(printf "$MSG_PATH_WARN" "$INSTALL_DIR")"
     printf "\n  ${BOLD}export PATH=\"\$HOME/.local/bin:\$PATH\"${RESET}\n"
   fi
 
-  printf "\n${GREEN}${BOLD}完成！${RESET} 运行 ${BOLD}skm --help${RESET} 开始使用。\n\n"
+  printf "\n${GREEN}${BOLD}%s${RESET} $(printf "$MSG_HINT" "${BOLD}" "${RESET}")\n\n" "$MSG_DONE"
 }
 
 main "$@"

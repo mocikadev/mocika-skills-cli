@@ -59,12 +59,50 @@ download() {
 }
 
 resolve_url() {
-  local target="$1"
+  local name="$1"
   if [ "$VERSION" = "latest" ]; then
-    echo "https://github.com/$REPO/releases/latest/download/$BINARY-$target"
+    echo "https://github.com/$REPO/releases/latest/download/$name"
   else
-    echo "https://github.com/$REPO/releases/download/$VERSION/$BINARY-$target"
+    echo "https://github.com/$REPO/releases/download/$VERSION/$name"
   fi
+}
+
+verify_checksum() {
+  local binary_path="$1" target="$2"
+  local checksum_url checksum_tmp expected actual
+
+  checksum_url=$(resolve_url "SHA256SUMS.txt")
+  checksum_tmp=$(mktemp)
+
+  info "校验 SHA256..."
+  if ! download "$checksum_url" "$checksum_tmp" 2>/dev/null; then
+    rm -f "$checksum_tmp"
+    warn "无法下载 SHA256SUMS.txt，跳过校验。"
+    return 0
+  fi
+
+  expected=$(grep "  $BINARY-$target$" "$checksum_tmp" | awk '{print $1}')
+  rm -f "$checksum_tmp"
+
+  if [ -z "$expected" ]; then
+    warn "SHA256SUMS.txt 中未找到 $BINARY-$target 条目，跳过校验。"
+    return 0
+  fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    actual=$(sha256sum "$binary_path" | awk '{print $1}')
+  elif command -v shasum >/dev/null 2>&1; then
+    actual=$(shasum -a 256 "$binary_path" | awk '{print $1}')
+  else
+    warn "未找到 sha256sum / shasum，跳过校验。"
+    return 0
+  fi
+
+  if [ "$expected" != "$actual" ]; then
+    die "SHA256 校验失败！\n  预期: $expected\n  实际: $actual"
+  fi
+
+  ok "SHA256 校验通过"
 }
 
 main() {
@@ -72,7 +110,7 @@ main() {
 
   local target url tmp
   target=$(detect_target)
-  url=$(resolve_url "$target")
+  url=$(resolve_url "$BINARY-$target")
 
   info "平台    ：$target"
   info "版本    ：$VERSION"
@@ -87,11 +125,15 @@ main() {
   trap "rm -f '$tmp'" EXIT
 
   download "$url" "$tmp" || die "下载失败，请检查网络或版本号是否正确。"
-
+  verify_checksum "$tmp" "$target"
   chmod +x "$tmp"
   mv "$tmp" "$INSTALL_DIR/$BINARY"
 
   ok "已安装：$INSTALL_DIR/$BINARY"
+
+  if "$INSTALL_DIR/$BINARY" --version >/dev/null 2>&1; then
+    ok "版本    ：$("$INSTALL_DIR/$BINARY" --version 2>&1)"
+  fi
 
   if ! echo ":${PATH}:" | grep -qF ":${INSTALL_DIR}:"; then
     printf "\n"

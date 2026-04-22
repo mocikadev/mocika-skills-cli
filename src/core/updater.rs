@@ -36,20 +36,20 @@ struct Asset {
     browser_download_url: String,
 }
 
-/// Returns the build target triple, or `None` for unsupported platforms.
+/// Returns the user-friendly platform identifier used in release asset names,
+/// or `None` for unsupported platforms.
 ///
-/// Covers the four targets produced by the release workflow:
-/// `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`,
-/// `x86_64-apple-darwin`, `aarch64-apple-darwin`.
+/// Matches the naming convention in the release workflow:
+/// `linux-amd64`, `linux-arm64`, `macos-amd64`, `macos-arm64`.
 pub fn current_target() -> Option<&'static str> {
     if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
-        Some("x86_64-unknown-linux-musl")
+        Some("linux-amd64")
     } else if cfg!(all(target_os = "linux", target_arch = "aarch64")) {
-        Some("aarch64-unknown-linux-musl")
+        Some("linux-arm64")
     } else if cfg!(all(target_os = "macos", target_arch = "x86_64")) {
-        Some("x86_64-apple-darwin")
+        Some("macos-amd64")
     } else if cfg!(all(target_os = "macos", target_arch = "aarch64")) {
-        Some("aarch64-apple-darwin")
+        Some("macos-arm64")
     } else {
         None
     }

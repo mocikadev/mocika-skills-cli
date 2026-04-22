@@ -63,3 +63,21 @@ help 文本支持中英双语，运行时动态注入（不是静态编译）。
 
 - **skm-skill**：CLI 命令参考 skill，供 AI Agent 学习并代替用户操作 skm。  
   仓库规划：`mocikadev/skm-skill`，CLI 命令稳定后输出。
+
+### skm-skill 同步规范
+
+`docs/skm-skill/` 目录是本仓库内的 skm-skill **唯一源文件**，外部仓库 `mocikadev/skm-skill` 是其发布镜像。
+
+| 文件 | 说明 |
+|------|------|
+| `docs/skm-skill/SKILL.md` | 完整命令参考（AI Agent 使用的核心文件） |
+| `docs/skm-skill/README.md` | 技能包说明文档（对人类用户） |
+
+**同步时机**（凡以下情形发生，必须同步更新 `mocikadev/skm-skill`）：
+- 新增、删除或改名任何 `skm` 子命令或参数
+- 修改命令行为、默认值或输出格式
+- 更新示例、安装脚本地址等面向用户的信息
+
+**同步流程**：
+1. 先在本仓库修改 `docs/skm-skill/SKILL.md` / `README.md`
+2. CLI 稳定后，将 `docs/skm-skill/` 内容推送至 `mocikadev/skm-skill` 仓库

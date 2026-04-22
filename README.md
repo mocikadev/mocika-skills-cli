@@ -119,4 +119,7 @@ cargo build --release
 
 ## 许可证
 
-MIT
+本项目采用 **MIT OR Apache-2.0** 双协议授权，你可以选择其中任意一种。
+
+- [LICENSE-MIT](LICENSE-MIT)
+- [LICENSE-APACHE](LICENSE-APACHE)

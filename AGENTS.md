@@ -8,6 +8,16 @@
 仓库：`MocikaSpace/mocika-skills-cli`  
 当前状态：**Phase 1 主体功能已实现，i18n / help 文本中英双语已完成**
 
+## Rust 提交前检查清单（必须按顺序执行）
+
+```bash
+cargo fmt                        # 1. 格式化（CI 用 --check，本地直接跑）
+cargo clippy -- -D warnings      # 2. Lint（警告即报错）
+cargo test                       # 3. 测试（如有）
+```
+
+> ⚠️ `clippy` 通过 ≠ `fmt` 通过，两者独立。CI 会同时检查，本地必须两个都跑。
+
 ## 关键约束
 
 - **语言**：纯 Rust CLI，无 GUI

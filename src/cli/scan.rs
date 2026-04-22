@@ -16,6 +16,14 @@ pub fn run(args: ScanArgs) -> Result<()> {
     let detected = agent::detect_agents()?;
     let existing = config::load_agents()?;
     let mut new_ids = Vec::new();
+    let mut removed_ids = Vec::new();
+
+    for id in existing.agents.keys() {
+        if !agent::is_agent_present(id) {
+            removed_ids.push(id.clone());
+        }
+    }
+    removed_ids.sort();
 
     for item in detected.into_iter().filter(|item| item.installed) {
         if existing.agents.contains_key(&item.id) {
@@ -27,18 +35,33 @@ pub fn run(args: ScanArgs) -> Result<()> {
         }
     }
 
-    if new_ids.is_empty() {
+    for id in &removed_ids {
+        if !args.dry_run {
+            config::remove_agent_entry(id)?;
+        }
+    }
+
+    if new_ids.is_empty() && removed_ids.is_empty() {
         println!(
             "{} {}",
             style(i18n::t("scan")).cyan().bold(),
-            i18n::t("no new agents detected")
+            i18n::t("no changes detected")
         );
     } else {
-        println!(
-            "{} {}",
-            style(i18n::t("scan")).green().bold(),
-            i18n::fmt_new_agents(new_ids.len(), &new_ids.join(", "))
-        );
+        if !new_ids.is_empty() {
+            println!(
+                "{} {}",
+                style(i18n::t("scan")).green().bold(),
+                i18n::fmt_new_agents(new_ids.len(), &new_ids.join(", "))
+            );
+        }
+        if !removed_ids.is_empty() {
+            println!(
+                "{} {}",
+                style(i18n::t("scan")).yellow().bold(),
+                i18n::fmt_removed_agents(removed_ids.len(), &removed_ids.join(", "))
+            );
+        }
     }
 
     Ok(())

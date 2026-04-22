@@ -120,6 +120,7 @@ fn resolve_target_agents(link_to: Option<&str>) -> Result<Vec<String>> {
             let mut ids = config::load_agents()?
                 .agents
                 .keys()
+                .filter(|id| agent::is_agent_present(id))
                 .cloned()
                 .collect::<Vec<_>>();
             if ids.is_empty() {

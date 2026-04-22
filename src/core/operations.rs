@@ -187,6 +187,17 @@ pub fn assign_skill(skill_id: &str, agent_id: &str) -> Result<OperationResult> {
     }
 
     let agent_dir = resolve_agent_skills_dir(agent_id)?;
+
+    if let Ok(config_dir) = agent::config_dir_for(agent_id) {
+        if !config_dir.exists() {
+            bail!(
+                "agent '{}' is not installed (directory not found: {})",
+                agent_id,
+                config_dir.display()
+            );
+        }
+    }
+
     fs::create_dir_all(&agent_dir)?;
 
     let link_path = agent_dir.join(skill_id);
@@ -1178,7 +1189,10 @@ fn resolve_relink_targets(agent_id: Option<&str>) -> Result<Vec<(String, PathBuf
     }
 
     let configured = config::load_agents()?;
-    let mut targets = agent::agent_skills_dirs_from_config(&configured);
+    let mut targets = agent::agent_skills_dirs_from_config(&configured)
+        .into_iter()
+        .filter(|(id, _)| agent::is_agent_present(id))
+        .collect::<Vec<_>>();
     if targets.is_empty() {
         targets = agent::all_installed_agents()?
             .into_iter()

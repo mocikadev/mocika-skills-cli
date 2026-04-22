@@ -117,6 +117,22 @@ pub fn detect_agents() -> Result<Vec<AgentStatus>> {
     Ok(statuses)
 }
 
+pub fn is_agent_present(agent_id: &str) -> bool {
+    let defs = definitions();
+    let Some(def) = defs.iter().find(|d| d.id == agent_id) else {
+        return true;
+    };
+
+    if detect_command(def.detect_command) {
+        return true;
+    }
+
+    // Skills dir is intentionally excluded: skm creates it, so it can't prove the agent is installed.
+    config_dir_for(agent_id)
+        .map(|dir| dir.exists())
+        .unwrap_or(false)
+}
+
 pub fn all_installed_agents() -> Result<Vec<AgentStatus>> {
     Ok(detect_agents()?
         .into_iter()

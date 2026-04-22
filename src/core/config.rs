@@ -115,6 +115,16 @@ pub fn save_agents(config: &AgentsConfig) -> Result<()> {
     atomic_write(&agents_file_path()?, &payload)
 }
 
+pub fn remove_agent_entry(id: &str) -> Result<()> {
+    let normalized_id = id.trim();
+    if normalized_id.is_empty() {
+        return Err(anyhow!("agent id cannot be empty"));
+    }
+    let mut config = load_agents()?;
+    config.agents.remove(normalized_id);
+    save_agents(&config)
+}
+
 pub fn add_agent_entry(id: &str, path: &str) -> Result<()> {
     let normalized_id = id.trim();
     let normalized_path = path.trim();

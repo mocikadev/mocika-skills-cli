@@ -47,6 +47,7 @@ pub fn t(key: &str) -> &'static str {
             "warn" => "warn",
             "error" => "error",
             "no new agents detected" => "no new agents detected",
+            "no changes detected" => "no changes detected",
             "no skills found" => "no skills found",
             "no installed skills" => "no installed skills",
             "no sources configured" => "no sources configured",
@@ -165,6 +166,7 @@ pub fn t(key: &str) -> &'static str {
             "warn" => "警告",
             "error" => "错误",
             "no new agents detected" => "未检测到新 Agent",
+            "no changes detected" => "未检测到变化",
             "no skills found" => "未找到技能包",
             "no installed skills" => "暂未安装技能包",
             "no sources configured" => "未配置来源",
@@ -288,6 +290,13 @@ pub fn fmt_new_agents(count: usize, ids: &str) -> String {
     match *current() {
         Lang::En => format!("{count} new agents detected: {ids}"),
         Lang::Zh => format!("检测到 {count} 个新 Agent：{ids}"),
+    }
+}
+
+pub fn fmt_removed_agents(count: usize, ids: &str) -> String {
+    match *current() {
+        Lang::En => format!("{count} stale agent(s) removed from agents.toml: {ids}"),
+        Lang::Zh => format!("已从 agents.toml 移除 {count} 个失效 Agent：{ids}"),
     }
 }
 

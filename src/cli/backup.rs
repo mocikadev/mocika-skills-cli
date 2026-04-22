@@ -30,7 +30,9 @@ pub enum BackupCommands {
 
 pub fn run(cmd: BackupCommands) -> Result<()> {
     match cmd {
-        BackupCommands::List { name: Some(skill_name) } => {
+        BackupCommands::List {
+            name: Some(skill_name),
+        } => {
             let backups = backup::list_backups(&skill_name)?;
             if backups.is_empty() {
                 println!(

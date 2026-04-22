@@ -79,8 +79,8 @@ fn run_outdated() -> Result<()> {
 }
 
 pub fn run_info(name: &str) -> Result<()> {
-    let detail =
-        skill::read_skill_detail(name)?.ok_or_else(|| anyhow::anyhow!("skill not found: {name}"))?;
+    let detail = skill::read_skill_detail(name)?
+        .ok_or_else(|| anyhow::anyhow!("skill not found: {name}"))?;
 
     println!("{}", style(&detail.summary.display_name).green().bold());
     println!("{}: {}", i18n::t("id"), detail.summary.id);

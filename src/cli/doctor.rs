@@ -18,9 +18,17 @@ pub fn run(_args: DoctorArgs) -> Result<()> {
 
     println!();
     if issues == 0 {
-        println!("{} {}", style("✓").green().bold(), i18n::fmt_doctor_summary(0));
+        println!(
+            "{} {}",
+            style("✓").green().bold(),
+            i18n::fmt_doctor_summary(0)
+        );
     } else {
-        println!("{} {}", style("✗").red().bold(), i18n::fmt_doctor_summary(issues));
+        println!(
+            "{} {}",
+            style("✗").red().bold(),
+            i18n::fmt_doctor_summary(issues)
+        );
         std::process::exit(1);
     }
 
@@ -37,7 +45,11 @@ fn check_env() -> usize {
     print_check(
         shared_ok,
         i18n::t("doctor.shared_dir"),
-        i18n::t(if shared_ok { "doctor.exists" } else { "doctor.missing" }),
+        i18n::t(if shared_ok {
+            "doctor.exists"
+        } else {
+            "doctor.missing"
+        }),
     );
     if !shared_ok {
         issues += 1;
@@ -47,7 +59,11 @@ fn check_env() -> usize {
     print_check(
         lock_ok,
         i18n::t("doctor.lock_file"),
-        i18n::t(if lock_ok { "doctor.readable" } else { "doctor.unreadable" }),
+        i18n::t(if lock_ok {
+            "doctor.readable"
+        } else {
+            "doctor.unreadable"
+        }),
     );
     if !lock_ok {
         issues += 1;
@@ -57,7 +73,11 @@ fn check_env() -> usize {
     print_check(
         agents_toml_ok,
         i18n::t("doctor.agents_toml"),
-        i18n::t(if agents_toml_ok { "doctor.readable" } else { "doctor.unreadable" }),
+        i18n::t(if agents_toml_ok {
+            "doctor.readable"
+        } else {
+            "doctor.unreadable"
+        }),
     );
     if !agents_toml_ok {
         issues += 1;

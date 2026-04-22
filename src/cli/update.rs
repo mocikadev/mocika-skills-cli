@@ -51,10 +51,7 @@ pub fn run(args: UpdateArgs) -> Result<()> {
                 updated += 1;
             }
             Err(error) => {
-                eprintln!(
-                    "{} {target}: {error}",
-                    style(i18n::t("error")).red().bold()
-                );
+                eprintln!("{} {target}: {error}", style(i18n::t("error")).red().bold());
                 failures.push(target);
             }
         }

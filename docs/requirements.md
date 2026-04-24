@@ -394,19 +394,25 @@ cargo install skm
 
 ---
 
-## 十三、skm-skill（配套技能包）
+## 十三、skm skill（配套技能包）
 
 ### 设计思路
 
 参考 `android-cli` 的模式：CLI 工具本身发布一个配套 skill，AI Agent 装了这个 skill 后，就能理解工具的所有命令，进而代替用户操作。
 
-`skm` 同样提供一个 **`skm-skill`** 技能包，发布在独立仓库（`https://github.com/mocikadev/skm-skill`）：
+`skm` 在本仓库内维护配套 skill，路径为 `skills/skm/`：
 
 ```
-skm-skill/
+skills/skm/
 ├── SKILL.md        # 描述 skm 的安装方式 + 完整命令参考
-└── references/
-    └── commands.md # 子命令详细说明（类比 android-cli/references/）
+├── README.md       # 技能包说明（中文）
+└── README.en.md    # 技能包说明（英文）
+```
+
+### 安装命令
+
+```bash
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 ```
 
 ### SKILL.md 内容规划
@@ -420,12 +426,8 @@ skm-skill/
 ```
 1. 用户安装 skm：
    curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
-2. skm install mocikadev/skm-skill --link-to all
+2. skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
    → AI Agent 学会了所有 skm 命令
 3. 用户对 AI 说："帮我把 android-cli 装到所有 Agent"
    → AI 执行 skm install android-cli --link-to all
 ```
-
-### 实现时机
-
-与 CLI 主体同步开发，CLI 命令基本稳定后输出 `skm-skill` 的 `SKILL.md`。

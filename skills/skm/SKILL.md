@@ -19,6 +19,20 @@ curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/in
 
 安装后运行 `skm --help` 验证。
 
+## 版本检查
+
+在会话中**首次调用任何 skm 命令前**，依次执行：
+
+```bash
+skm self-update --check
+skm update --check skm
+```
+
+- `skm` 有新版本：告知用户 `skm 有可用更新 vX.Y.Z，是否立即升级？`，确认后执行 `skm self-update`
+- `skm` skill 有更新：直接执行 `skm update skm`（纯文本文件，无需确认）
+- 两者均已最新：静默继续，不打扰用户
+- 每次会话各执行一次，不重复
+
 ## 数据目录
 
 | 路径 | 说明 |
@@ -47,7 +61,7 @@ skm agent list      # 查看已注册的 Agent 列表
 skm install mobile-android-design --link-to all
 
 # GitHub 简写（owner/repo，自动补全 github.com）
-skm install mocikadev/skm-skill --link-to all
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 
 # GitHub 简写 + 子目录（支持多级路径）
 skm install wshobson/agents:mobile-android-design --link-to all
@@ -220,6 +234,19 @@ skm doctor
 
 ### 自升级
 
+```bash
+skm self-update            # 升级 skm binary 到最新版本
+skm self-update --check    # 仅检查是否有新版本，不执行升级
+```
+
+更新 skm skill 本身（有更新时直接执行，无需确认）：
+
+```bash
+skm update skm
+skm update --check skm    # 仅检查，不执行
+```
+
+## 常用场景速查
 
 | 场景 | 命令 |
 |------|------|

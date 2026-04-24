@@ -45,6 +45,9 @@ case "${LANG:-}" in
     MSG_HINT="运行 %sskm --help%s 开始使用。"
     MSG_UNSUPPORTED_ARCH="不支持的架构：%s（%s）"
     MSG_UNSUPPORTED_OS="不支持的操作系统：%s（仅支持 Linux / macOS）"
+    MSG_SKILL_INSTALLING="正在安装配套 skm skill..."
+    MSG_SKILL_INSTALLED="skm skill 已安装，运行 %sskm scan && skm relink%s 将技能链接到 AI Agent"
+    MSG_SKILL_INSTALL_FAIL="skm skill 安装失败，可稍后手动运行：skm install mocikadev/mocika-skills-cli:skills/skm"
     ;;
   *)
     MSG_TITLE="Installing skm — AI Agent skill manager"
@@ -66,6 +69,9 @@ case "${LANG:-}" in
     MSG_HINT="Run %sskm --help%s to get started."
     MSG_UNSUPPORTED_ARCH="Unsupported architecture: %s (%s)"
     MSG_UNSUPPORTED_OS="Unsupported OS: %s (only Linux / macOS are supported)"
+    MSG_SKILL_INSTALLING="Installing skm skill..."
+    MSG_SKILL_INSTALLED="skm skill installed. Run %sskm scan && skm relink%s to link it to your AI agents."
+    MSG_SKILL_INSTALL_FAIL="skm skill install failed. Run manually later: skm install mocikadev/mocika-skills-cli:skills/skm"
     ;;
 esac
 
@@ -155,6 +161,22 @@ verify_checksum() {
   ok "$MSG_CHECKSUM_OK"
 }
 
+# ---------------------------------------------------------------------------
+# 安装配套 skm skill
+# ---------------------------------------------------------------------------
+install_skm_skill() {
+  local skm_bin="$INSTALL_DIR/$BINARY"
+
+  printf "\n"
+  info "$MSG_SKILL_INSTALLING"
+
+  if "$skm_bin" install "mocikadev/mocika-skills-cli:skills/skm" 2>/dev/null; then
+    ok "$(printf "$MSG_SKILL_INSTALLED" "${BOLD}" "${RESET}")"
+  else
+    warn "$MSG_SKILL_INSTALL_FAIL"
+  fi
+}
+
 main() {
   printf "\n${BOLD}%s${RESET}\n\n" "$MSG_TITLE"
 
@@ -190,6 +212,8 @@ main() {
     warn "$(printf "$MSG_PATH_WARN" "$INSTALL_DIR")"
     printf "\n  ${BOLD}export PATH=\"\$HOME/.local/bin:\$PATH\"${RESET}\n"
   fi
+
+  install_skm_skill
 
   printf "\n${GREEN}${BOLD}%s${RESET} $(printf "$MSG_HINT" "${BOLD}" "${RESET}")\n\n" "$MSG_DONE"
 }

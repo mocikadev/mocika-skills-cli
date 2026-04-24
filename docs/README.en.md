@@ -49,12 +49,12 @@ skm install mobile-android-design --link-to all
 skm relink cursor
 ```
 
-## Install skm-skill (recommended)
+## Install skm skill (recommended)
 
-`skm-skill` is the companion AI Agent skill package that lets your AI assistant understand and run skm commands directly:
+`skm` ships with a companion AI Agent skill that lets your AI assistant understand and run skm commands directly:
 
 ```bash
-skm install mocikadev/skm-skill --link-to all
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 ```
 
 > Once installed, your AI Agent can handle all `skm` operations on your behalf, so you don't need to memorize the commands.

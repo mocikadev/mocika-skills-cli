@@ -1,4 +1,4 @@
-# skm-skill
+# skm skill
 
 > English | [中文](README.md)
 
@@ -6,26 +6,14 @@ AI Agent skill that lets your AI assistant operate `skm` commands directly — n
 
 ## Installation
 
-Via skm (recommended):
-
 ```bash
-skm install mocikadev/skm-skill --link-to all
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 ```
 
 Link to a specific agent only:
 
 ```bash
-skm install mocikadev/skm-skill --link-to opencode
-```
-
-Manual installation (without skm):
-
-```bash
-# Clone into the central skills directory
-git clone https://github.com/mocikadev/skm-skill ~/.agents/skills/skm
-
-# Symlink to your agent (opencode example)
-ln -s ~/.agents/skills/skm/SKILL.md ~/.config/opencode/skills/skm
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to opencode
 ```
 
 ## Usage

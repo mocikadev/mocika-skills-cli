@@ -50,12 +50,12 @@ skm install mobile-android-design --link-to all
 skm relink cursor
 ```
 
-## 安装 skm-skill（推荐）
+## 安装 skm skill（推荐）
 
-`skm-skill` 是配套的 AI Agent 技能包，让你的 AI 助手直接理解并操作 skm 命令：
+`skm` 内置了配套的 AI Agent 技能包，让你的 AI 助手直接理解并操作 skm 命令：
 
 ```bash
-skm install mocikadev/skm-skill --link-to all
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 ```
 
 > 安装后，AI Agent 可以代替你执行所有 `skm` 操作，无需记忆命令细节。

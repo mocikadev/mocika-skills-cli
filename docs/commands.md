@@ -37,7 +37,7 @@ skm install <NAME> [--link-to <AGENT>]
 | 格式 | 说明 | 示例 |
 |------|------|------|
 | `<skill-name>` | 从已配置注册表按名称搜索安装 | `mobile-android-design` |
-| `owner/repo` | GitHub 仓库根目录（自动补全 `https://github.com/`） | `mocikadev/skm-skill` |
+| `owner/repo` | GitHub 仓库根目录（自动补全 `https://github.com/`） | `wshobson/agents` |
 | `owner/repo:subpath` | GitHub 仓库子目录，subpath 可含多级 `/` | `wshobson/agents:mobile-android-design` |
 | `owner/repo:dir/subdir` | GitHub 仓库多级子目录 | `myorg/skills:tools/formatter` |
 | `<git-url>` | 完整 Git URL，安装仓库根目录（支持 https / ssh） | `https://github.com/wshobson/agents.git` |
@@ -55,10 +55,8 @@ skm install mobile-android-design
 skm install mobile-android-design --link-to opencode
 skm install mobile-android-design --link-to all
 
-# GitHub 简写（仓库根目录）
-skm install mocikadev/skm-skill --link-to all
-
 # GitHub 简写（子目录，单级 / 多级均支持）
+skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 skm install wshobson/agents:mobile-android-design
 skm install myorg/skills:tools/formatter
 

@@ -1,10 +1,13 @@
 ---
 name: skm
 displayName: skm — AI Agent 技能包管理器
-description: 使用 skm CLI 管理本地 AI Agent 技能包：安装、卸载、搜索、链接、更新和备份。
+description: Local skill package manager for AI Agents. Use when installing,
+  uninstalling, searching, linking, or updating AI Agent skills via skm CLI,
+  or when running skm scan / relink / doctor commands.
 version: 0.1.0
 author: mocikadev
-tags: [cli, skill-manager, agent, tooling]
+tags: [skm, skill-manager, install, link, update, scan, agent, tooling]
+compatible_agents: [opencode, claude-code, codex, gemini, cursor]
 ---
 
 # skm — AI Agent 技能包管理器

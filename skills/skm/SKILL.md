@@ -16,9 +16,19 @@ compatible_agents: [opencode, claude-code, codex, gemini, cursor]
 
 ## 安装 skm
 
+**Linux / macOS**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
 ```
+
+**Windows**（PowerShell）
+
+```powershell
+irm https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.ps1 | iex
+```
+
+> Windows 需开启 Developer Mode（设置 → 系统 → 开发者选项）或以管理员身份运行。
 
 安装后运行 `skm --help` 验证。
 

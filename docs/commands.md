@@ -1,7 +1,23 @@
 # skm 命令参考
 
 > 版本：0.2  
-> 二进制：`skm`
+> 二进制：`skm`（Windows 为 `skm.exe`）
+
+---
+
+## 安装
+
+**Linux / macOS**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
+```
+
+**Windows**（PowerShell，需开启 Developer Mode 或以管理员运行）
+
+```powershell
+irm https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.ps1 | iex
+```
 
 ---
 

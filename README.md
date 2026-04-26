@@ -19,11 +19,21 @@ AI Agent 技能包本地管理 CLI。统一管理多个 AI Agent 的技能包安
 
 ## 安装 skm
 
+**Linux / macOS**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.sh | bash
 ```
 
-安装到 `~/.local/bin/skm`。如需自定义路径：
+**Windows**（PowerShell）
+
+```powershell
+irm https://raw.githubusercontent.com/mocikadev/mocika-skills-cli/main/install.ps1 | iex
+```
+
+> Windows 需开启 **Developer Mode**（设置 → 系统 → 开发者选项）或以管理员身份运行，以支持目录符号链接。
+
+安装到 `~/.local/bin/skm`（Windows 为 `~\.local\bin\skm.exe`）。自定义路径：
 
 ```bash
 SKM_INSTALL_DIR=/usr/local/bin bash <(curl -fsSL .../install.sh)
@@ -108,7 +118,7 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 | Linux | aarch64 (musl) | ✅ |
 | macOS | x86_64 | ✅ |
 | macOS | Apple Silicon | ✅ |
-| Windows | — | 计划中 |
+| Windows | x86_64 | ✅ |
 
 ## 从源码构建
 

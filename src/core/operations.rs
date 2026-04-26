@@ -849,7 +849,18 @@ fn create_link(source: &Path, target: &Path) -> Result<()> {
 
     #[cfg(target_family = "windows")]
     {
-        std::os::windows::fs::symlink_dir(source, target)?;
+        std::os::windows::fs::symlink_dir(source, target).map_err(|e| {
+            // ERROR_PRIVILEGE_NOT_HELD = 1314
+            if e.raw_os_error() == Some(1314) {
+                anyhow::anyhow!(
+                    "cannot create symlink: Windows requires Developer Mode or elevated privileges.\n\
+                     Enable Developer Mode: Settings → System → For developers → Developer Mode,\n\
+                     or run skm as Administrator."
+                )
+            } else {
+                anyhow::anyhow!("cannot create symlink: {e}")
+            }
+        })?;
         Ok(())
     }
 }

@@ -8,11 +8,34 @@ use serde::{Deserialize, Serialize};
 const SOURCES_FILE_NAME: &str = "sources.toml";
 const AGENTS_FILE_NAME: &str = "agents.toml";
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum SourceType {
+    #[serde(rename = "skills_sh")]
+    #[default]
+    SkillsSh,
+    #[serde(rename = "github")]
+    GitHub,
+    #[serde(rename = "git")]
+    Git,
+}
+
+impl std::fmt::Display for SourceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SourceType::SkillsSh => write!(f, "skills.sh"),
+            SourceType::GitHub => write!(f, "github"),
+            SourceType::Git => write!(f, "git"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SourceEntry {
     pub name: String,
     pub url: String,
     pub enabled: bool,
+    #[serde(default)]
+    pub source_type: SourceType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,6 +83,8 @@ pub fn add_source(name: &str, url: &str) -> Result<()> {
         return Err(anyhow!("source URL cannot be empty"));
     }
 
+    let source_type = detect_source_type(normalized_url);
+
     if let Some(entry) = config
         .sources
         .iter_mut()
@@ -68,11 +93,13 @@ pub fn add_source(name: &str, url: &str) -> Result<()> {
         entry.name = normalized_name.to_string();
         entry.url = normalized_url.to_string();
         entry.enabled = true;
+        entry.source_type = source_type;
     } else {
         config.sources.push(SourceEntry {
             name: normalized_name.to_string(),
             url: normalized_url.to_string(),
             enabled: true,
+            source_type,
         });
     }
 
@@ -178,8 +205,36 @@ fn default_sources() -> SourcesConfig {
             name: "skills.sh".to_string(),
             url: "https://skills.sh".to_string(),
             enabled: true,
+            source_type: SourceType::SkillsSh,
         }],
     }
+}
+
+fn detect_source_type(url: &str) -> SourceType {
+    if url.to_lowercase().contains("skills.sh") {
+        return SourceType::SkillsSh;
+    }
+
+    let lower = url.to_lowercase();
+    if lower.starts_with("https://github.com/")
+        || lower.starts_with("http://github.com/")
+        || lower.starts_with("git@github.com:")
+        || lower.starts_with("ssh://git@github.com/")
+        || lower.starts_with("git://github.com/")
+    {
+        return SourceType::GitHub;
+    }
+
+    if url.contains("://") || url.starts_with("git@") {
+        return SourceType::Git;
+    }
+
+    let is_owner_repo_shorthand = url.chars().filter(|ch| *ch == '/').count() == 1;
+    if is_owner_repo_shorthand {
+        return SourceType::GitHub;
+    }
+
+    SourceType::SkillsSh
 }
 
 fn sources_file_path() -> Result<PathBuf> {

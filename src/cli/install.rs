@@ -94,7 +94,12 @@ fn resolve_install_source(input: &str) -> Result<(String, Option<String>)> {
 
     let query = input.trim();
     for source in enabled_sources {
-        let matches = registry::search_skills(&source.url, query, 20)?;
+        let matches = match source.source_type {
+            config::SourceType::SkillsSh => registry::search_skills(&source.url, query, 20)?,
+            config::SourceType::GitHub | config::SourceType::Git => {
+                registry::search_git_source(&source.url, query, 20)?
+            }
+        };
         let best = matches
             .iter()
             .find(|item| {
@@ -114,26 +119,25 @@ fn resolve_install_source(input: &str) -> Result<(String, Option<String>)> {
 }
 
 fn resolve_target_agents(link_to: Option<&str>) -> Result<Vec<String>> {
-    match link_to {
-        None => Ok(Vec::new()),
-        Some(target) if target.eq_ignore_ascii_case("all") => {
-            let mut ids = config::load_agents()?
-                .agents
-                .keys()
-                .filter(|id| agent::is_agent_present(id))
-                .cloned()
-                .collect::<Vec<_>>();
-            if ids.is_empty() {
-                ids = agent::all_installed_agents()?
-                    .into_iter()
-                    .map(|item| item.id)
-                    .collect();
-            }
-            ids.sort();
-            ids.dedup();
-            Ok(ids)
+    let target = link_to.unwrap_or("all");
+    if target.eq_ignore_ascii_case("all") {
+        let mut ids = config::load_agents()?
+            .agents
+            .keys()
+            .filter(|id| agent::is_agent_present(id))
+            .cloned()
+            .collect::<Vec<_>>();
+        if ids.is_empty() {
+            ids = agent::all_installed_agents()?
+                .into_iter()
+                .map(|item| item.id)
+                .collect();
         }
-        Some(target) => Ok(vec![target.to_string()]),
+        ids.sort();
+        ids.dedup();
+        Ok(ids)
+    } else {
+        Ok(vec![target.to_string()])
     }
 }
 

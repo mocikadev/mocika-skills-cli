@@ -22,7 +22,15 @@ pub fn run(args: SearchArgs) -> Result<()> {
     let mut merged = BTreeMap::<String, RegistrySkill>::new();
 
     for source in sources.sources.into_iter().filter(|entry| entry.enabled) {
-        for skill in registry::search_skills(&source.url, &args.keyword, args.limit)? {
+        let skills = match source.source_type {
+            config::SourceType::SkillsSh => {
+                registry::search_skills(&source.url, &args.keyword, args.limit)?
+            }
+            config::SourceType::GitHub | config::SourceType::Git => {
+                registry::search_git_source(&source.url, &args.keyword, args.limit)?
+            }
+        };
+        for skill in skills {
             merged.entry(skill.id.clone()).or_insert(skill);
         }
     }

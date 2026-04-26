@@ -52,11 +52,12 @@ pub fn run(cmd: SourceCommands) -> Result<()> {
             } else {
                 for source in sources.sources {
                     println!(
-                        "{}  {}  {}={}",
+                        "{}  {}  {}={}  type={}",
                         style(source.name).green(),
                         source.url,
                         i18n::t("enabled"),
-                        source.enabled
+                        source.enabled,
+                        source.source_type,
                     );
                 }
             }

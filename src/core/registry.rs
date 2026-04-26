@@ -16,6 +16,7 @@ use crate::models::{RegistrySkill, RegistrySkillContent};
 
 const LEADERBOARD_TTL_SECS: u64 = 5 * 60;
 const SKILL_CONTENT_TTL_SECS: u64 = 10 * 60;
+const GIT_SOURCE_CACHE_TTL_SECS: u64 = 5 * 60;
 const APP_USER_AGENT: &str = "skm/0.1";
 const SKILL_FILE_NAME: &str = "SKILL.md";
 
@@ -759,6 +760,239 @@ fn fetch_skill_content_from_repository_url(
 
     let _cleanup = fs::remove_dir_all(&temp);
     result
+}
+
+fn skill_matches_keyword(content: &str, dir_path: &str, keyword: &str) -> bool {
+    let kw = keyword.trim().to_lowercase();
+    if kw.is_empty() {
+        return true;
+    }
+
+    let dir_name = dir_path
+        .split('/')
+        .next_back()
+        .unwrap_or(dir_path)
+        .to_lowercase();
+    if dir_name.contains(&kw) {
+        return true;
+    }
+
+    let mut in_frontmatter = false;
+    let mut found_start = false;
+    for line in content.lines().take(60) {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            if !found_start {
+                found_start = true;
+                in_frontmatter = true;
+                continue;
+            } else {
+                break;
+            }
+        }
+        if !in_frontmatter {
+            continue;
+        }
+        if let Some((key, value)) = trimmed.split_once(':') {
+            let k = key.trim().to_lowercase();
+            if matches!(k.as_str(), "name" | "description" | "tags")
+                && value.trim().to_lowercase().contains(&kw)
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn skill_from_git_content(content: &str, source: &str, dir_path: &str) -> Option<RegistrySkill> {
+    let (frontmatter, _) = parse_skill_md_content(content).ok()?;
+
+    let name = frontmatter
+        .get("name")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| {
+            dir_path
+                .split('/')
+                .next_back()
+                .unwrap_or(dir_path)
+                .to_string()
+        });
+
+    let description = frontmatter
+        .get("description")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+
+    let skill_id = if dir_path.is_empty() {
+        name.to_lowercase().replace(' ', "-")
+    } else {
+        dir_path.to_string()
+    };
+
+    Some(RegistrySkill {
+        id: format!("{source}/{skill_id}"),
+        skill_id,
+        name,
+        source: source.to_string(),
+        installs: 0,
+        installs_yesterday: None,
+        change: None,
+        description,
+    })
+}
+
+fn sanitize_url_for_cache_key(url: &str) -> String {
+    let s = url
+        .trim()
+        .trim_start_matches("ssh://git@")
+        .trim_start_matches("git@")
+        .trim_start_matches("https://")
+        .trim_start_matches("http://")
+        .trim_start_matches("git://");
+    let s = s.trim_end_matches(".git").trim_end_matches('/');
+
+    let mut result = String::with_capacity(s.len());
+    let mut prev_dash = false;
+    for c in s.chars() {
+        let safe = if c.is_alphanumeric() || c == '.' {
+            c
+        } else {
+            '-'
+        };
+        if safe == '-' {
+            if !prev_dash {
+                result.push('-');
+            }
+            prev_dash = true;
+        } else {
+            result.push(safe);
+            prev_dash = false;
+        }
+    }
+    result.trim_matches('-').to_string()
+}
+
+fn git_source_cache_dir(source_url: &str) -> Result<PathBuf> {
+    let home = dirs::home_dir().ok_or_else(|| anyhow!("cannot resolve home directory"))?;
+    let key = sanitize_url_for_cache_key(source_url);
+    Ok(home.join(".agents").join(".skm-source-cache").join(key))
+}
+
+fn is_cache_fresh(cache_dir: &Path) -> bool {
+    let fetch_head = cache_dir.join(".git").join("FETCH_HEAD");
+    let head = cache_dir.join(".git").join("HEAD");
+    let marker = if fetch_head.exists() {
+        fetch_head
+    } else {
+        head
+    };
+    fs::metadata(&marker)
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| SystemTime::now().duration_since(t).ok())
+        .map(|age| age.as_secs() < GIT_SOURCE_CACHE_TTL_SECS)
+        .unwrap_or(false)
+}
+
+fn ensure_git_source_cache(clone_url: &str, cache_dir: &Path) -> Result<()> {
+    if cache_dir.join(".git").is_dir() {
+        if !is_cache_fresh(cache_dir) {
+            let _ = run_git(&["fetch", "--depth=1", "origin"], Some(cache_dir));
+            let _ = run_git(&["reset", "--hard", "FETCH_HEAD"], Some(cache_dir));
+        }
+        return Ok(());
+    }
+
+    if cache_dir.exists() {
+        let _ = fs::remove_dir_all(cache_dir);
+    }
+    fs::create_dir_all(cache_dir)?;
+    run_git(
+        &[
+            "clone",
+            "--depth=1",
+            clone_url,
+            &cache_dir.to_string_lossy(),
+        ],
+        None,
+    )
+    .context("failed to clone repository")?;
+    Ok(())
+}
+
+fn search_in_dir(
+    repo_dir: &Path,
+    source_label: &str,
+    keyword: &str,
+    limit: usize,
+) -> Result<Vec<RegistrySkill>> {
+    let skill_files = discover_skill_md_paths(repo_dir, 8)?;
+    let mut results = Vec::new();
+
+    for skill_file in skill_files {
+        let raw_relative = skill_file
+            .strip_prefix(repo_dir)
+            .unwrap_or(&skill_file)
+            .to_string_lossy()
+            .replace('\\', "/");
+        let relative_path = raw_relative.trim_start_matches('/');
+
+        let dir_path = if relative_path.eq_ignore_ascii_case("SKILL.md") {
+            String::new()
+        } else {
+            relative_path
+                .strip_suffix("/SKILL.md")
+                .unwrap_or(relative_path)
+                .to_string()
+        };
+
+        let content = match fs::read_to_string(&skill_file) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+
+        if !skill_matches_keyword(&content, &dir_path, keyword) {
+            continue;
+        }
+
+        if let Some(skill) = skill_from_git_content(&content, source_label, &dir_path) {
+            results.push(skill);
+        }
+
+        if results.len() >= limit {
+            break;
+        }
+    }
+
+    Ok(results)
+}
+
+pub fn search_git_source(
+    source_url: &str,
+    keyword: &str,
+    limit: usize,
+) -> Result<Vec<RegistrySkill>> {
+    let trimmed = source_url.trim();
+    let parsed = parse_skill_content_source(trimmed)?;
+
+    let clone_url = match &parsed {
+        SkillContentSource::GitHubSource(owner_repo) => {
+            if trimmed.contains("://") || trimmed.starts_with("git@") {
+                trimmed.to_string()
+            } else {
+                format!("https://github.com/{owner_repo}.git")
+            }
+        }
+        SkillContentSource::GitRepositoryUrl(url) => url.clone(),
+    };
+
+    let cache_dir = git_source_cache_dir(trimmed)?;
+    ensure_git_source_cache(&clone_url, &cache_dir)?;
+    search_in_dir(&cache_dir, trimmed, keyword, limit)
 }
 
 pub fn search_skills(registry_url: &str, query: &str, limit: usize) -> Result<Vec<RegistrySkill>> {

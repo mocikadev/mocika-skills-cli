@@ -17,7 +17,7 @@ use crate::models::{RegistrySkill, RegistrySkillContent};
 const LEADERBOARD_TTL_SECS: u64 = 5 * 60;
 const SKILL_CONTENT_TTL_SECS: u64 = 10 * 60;
 const GIT_SOURCE_CACHE_TTL_SECS: u64 = 5 * 60;
-const APP_USER_AGENT: &str = "skm/0.1";
+const APP_USER_AGENT: &str = concat!("skm/", env!("CARGO_PKG_VERSION"));
 const SKILL_FILE_NAME: &str = "SKILL.md";
 
 enum SkillContentSource {

@@ -4,7 +4,7 @@ displayName: skm — AI Agent 技能包管理器
 description: Local skill package manager for AI Agents. Use when installing,
   uninstalling, searching, linking, or updating AI Agent skills via skm CLI,
   or when running skm scan / relink / doctor commands.
-version: 0.1.0
+version: 0.2.0
 author: mocikadev
 tags: [skm, skill-manager, install, link, update, scan, agent, tooling]
 compatible_agents: [opencode, claude-code, codex, gemini, cursor]
@@ -45,6 +45,7 @@ skm update --check skm
 | `~/.agents/sources.toml` | 注册表源配置 |
 | `~/.agents/agents.toml` | 已注册 Agent 路径配置 |
 | `~/.agents/.skm-backups/` | 技能备份目录 |
+| `~/.agents/.skm-source-cache/` | Git / GitHub 源本地缓存（5 分钟 TTL） |
 
 Agent 目录下的技能文件均为指向中央仓库的软链接，不复制文件。
 
@@ -60,24 +61,27 @@ skm agent list      # 查看已注册的 Agent 列表
 ### 安装并部署技能
 
 ```bash
-# 从注册表安装
-skm install mobile-android-design --link-to all
+# 从注册表安装（默认链接到所有 Agent）
+skm install mobile-android-design
+
+# 安装到指定 Agent
+skm install mobile-android-design --link-to opencode
 
 # GitHub 简写（owner/repo，自动补全 github.com）
-skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
+skm install mocikadev/mocika-skills-cli:skills/skm
 
 # GitHub 简写 + 子目录（支持多级路径）
-skm install wshobson/agents:mobile-android-design --link-to all
+skm install wshobson/agents:mobile-android-design
 skm install myorg/skills:tools/formatter --link-to opencode
 
 # 完整 Git URL（GitLab / Gitee 等非 GitHub 平台使用此格式）
-skm install https://gitlab.com/myorg/skills.git --link-to all
+skm install https://gitlab.com/myorg/skills.git
 
 # 完整 Git URL + 子目录
 skm install https://github.com/myorg/skills.git#tools/formatter
 
 # 直接粘贴 GitHub 网页地址
-skm install https://github.com/myorg/skills/tree/main/formatter --link-to all
+skm install https://github.com/myorg/skills/tree/main/formatter
 ```
 
 ### 新增 Agent 后补齐链接
@@ -93,7 +97,7 @@ skm relink cursor   # 将所有已安装技能链接到 cursor
 
 #### `skm install <NAME> [--link-to <AGENT|all>]`
 
-从注册表或 Git 仓库安装技能。NAME 支持以下格式：
+从注册表或 Git 仓库安装技能，**默认链接到所有已安装 Agent**（等价于 `--link-to all`）。NAME 支持以下格式：
 - `skill-name` — 注册表名称
 - `owner/repo` — GitHub 仓库根目录（固定解析为 github.com）
 - `owner/repo:subpath` — GitHub 子目录，支持多级路径
@@ -104,7 +108,6 @@ skm relink cursor   # 将所有已安装技能链接到 cursor
 ```bash
 skm install mobile-android-design
 skm install mobile-android-design --link-to opencode
-skm install mobile-android-design --link-to all
 skm install wshobson/agents:mobile-android-design
 skm install https://github.com/wshobson/agents.git --link-to opencode
 ```
@@ -119,7 +122,7 @@ skm uninstall mobile-android-design
 
 #### `skm search <KEYWORD> [--limit <N>]`
 
-在 skills.sh 注册表中搜索技能（默认显示最多 20 条）。
+在所有已配置的注册表中搜索技能（默认显示最多 20 条）。`skills.sh` 源走 HTTP API；GitHub / Git 源通过本地缓存扫描 SKILL.md（首次 git clone，之后 5 分钟内命中缓存）。
 
 ```bash
 skm search android
@@ -188,10 +191,14 @@ skm relink cursor --force         # 覆盖冲突路径
 ### 注册表管理
 
 ```bash
-skm source list                   # 列出所有注册表源
-skm source add my-org https://github.com/my-org/skills  # 添加自定义源
-skm source remove my-org          # 移除注册表源
+skm source list                                          # 列出所有注册表源（含类型）
+skm source add my-org https://github.com/my-org/skills   # 添加 GitHub 仓库为源
+skm source add private git@github.com:org/private-skills  # SSH 私有仓库
+skm source add gitlab https://gitlab.com/org/skills.git   # 其他 Git 平台
+skm source remove my-org                                  # 移除注册表源
 ```
+
+`skm source add` 会自动检测 URL 类型：`github.com` → `github`，其他含 `://` 或 `git@` → `git`，`skills.sh` → `skills.sh`。GitHub / Git 源的搜索结果会缓存到 `~/.agents/.skm-source-cache/`。
 
 配置文件：`~/.agents/sources.toml`
 
@@ -254,8 +261,8 @@ skm update --check skm    # 仅检查，不执行
 | 场景 | 命令 |
 |------|------|
 | 初次配置，检测所有 Agent | `skm scan` |
-| 安装技能到所有 Agent | `skm install <name> --link-to all` |
-| 只安装，稍后手动链接 | `skm install <name>` 然后 `skm link <name> <agent>` |
+| 安装技能到所有 Agent | `skm install <name>`（默认） |
+| 安装到指定 Agent | `skm install <name> --link-to opencode` |
 | 新装了一个 Agent | `skm scan && skm relink <new-agent>` |
 | 查看某技能链接到哪些 Agent | `skm info <name>` |
 | 检查是否有可用更新 | `skm update --check` |

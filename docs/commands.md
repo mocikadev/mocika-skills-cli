@@ -1,6 +1,6 @@
 # skm 命令参考
 
-> 版本：0.1  
+> 版本：0.2  
 > 二进制：`skm`
 
 ---
@@ -30,7 +30,7 @@ skm install <NAME> [--link-to <AGENT>]
 | 参数 | 说明 |
 |------|------|
 | `<NAME>` | 见下方"支持的 NAME 格式" |
-| `--link-to <AGENT>` | 安装后软链到指定 Agent，填 `all` 链接所有已注册 Agent |
+| `--link-to <AGENT>` | 安装后软链到指定 Agent，填 `all` 链接所有已注册 Agent（**默认 `all`**，省略即链接全部） |
 
 **支持的 NAME 格式**
 
@@ -50,8 +50,10 @@ skm install <NAME> [--link-to <AGENT>]
 **示例**
 
 ```bash
-# 从注册表安装
+# 从注册表安装（默认链接到所有 Agent）
 skm install mobile-android-design
+
+# 安装并链接到指定 Agent
 skm install mobile-android-design --link-to opencode
 skm install mobile-android-design --link-to all
 
@@ -104,7 +106,7 @@ uninstalled mobile-android-design
 
 ### `skm search`
 
-在已配置的注册表中搜索技能。
+在已配置的所有注册表中搜索技能。`skills.sh` 源通过 HTTP API 搜索；GitHub / Git 源通过本地缓存扫描 SKILL.md 匹配关键词（首次需 `git clone`，之后 5 分钟内命中缓存，超时增量 `git fetch`）。
 
 ```
 skm search <KEYWORD> [--limit <N>]
@@ -282,7 +284,7 @@ warn conflict: mobile-android-design in cursor (skipped, use --force to overwrit
 
 ### `skm source list`
 
-列出所有配置的技能注册表。
+列出所有配置的技能注册表，输出格式：`<name>  <url>  enabled=<true|false>  type=<skills.sh|github|git>`
 
 ```
 skm source list
@@ -290,7 +292,13 @@ skm source list
 
 ### `skm source add`
 
-添加自定义技能注册表。
+添加自定义技能注册表。URL 会自动检测类型：
+
+| URL 形式 | 类型 | 搜索方式 |
+|----------|------|----------|
+| `https://skills.sh` | `skills.sh` | HTTP API |
+| `https://github.com/…` / `git@github.com:…` / `owner/repo` | `github` | git clone + 扫描 |
+| 其他 `https://` / `git@` URL（GitLab、私有 Git 等） | `git` | git clone + 扫描 |
 
 ```
 skm source add <NAME> <URL>
@@ -300,6 +308,8 @@ skm source add <NAME> <URL>
 
 ```bash
 skm source add my-org https://github.com/my-org/my-skills
+skm source add private git@github.com:myorg/private-skills
+skm source add gitlab-skills https://gitlab.com/myorg/skills.git
 ```
 
 ### `skm source remove`
@@ -412,6 +422,7 @@ skm backup delete <NAME> <SNAPSHOT_ID>
 | `~/.agents/sources.toml` | 注册表源配置 |
 | `~/.agents/agents.toml` | 已注册 Agent 路径配置 |
 | `~/.agents/.skm-backups/` | 技能备份目录 |
+| `~/.agents/.skm-source-cache/` | Git / GitHub 源本地缓存（5 分钟 TTL，超时增量 fetch） |
 
 ---
 

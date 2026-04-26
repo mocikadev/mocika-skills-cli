@@ -10,6 +10,7 @@ AI Agent 技能包本地管理 CLI。统一管理多个 AI Agent 的技能包安
 ## 特性
 
 - **统一安装**：一条命令从 [skills.sh](https://skills.sh) 安装技能，Git 仓库直装同样支持
+- **多源搜索**：`skm source add` 注册任意 GitHub / GitLab / 私有 Git 仓库为技能源，`skm search` 跨源搜索
 - **多 Agent 部署**：软链接机制，一份技能文件同时服务多个 Agent
 - **自动检测**：`skm scan` 检测本机已安装的 AI Agent，无需手动配置
 - **锁文件共享**：与 skilly GUI 共用 `~/.agents/.skill-lock.json`，数据互通
@@ -43,8 +44,8 @@ skm scan
 # 2. 搜索技能
 skm search android
 
-# 3. 安装技能并链接到所有 Agent
-skm install mobile-android-design --link-to all
+# 3. 安装技能（默认链接到所有 Agent）
+skm install mobile-android-design
 
 # 4. 新装了一个 Agent？一条命令补齐所有链接
 skm relink cursor
@@ -64,9 +65,9 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 
 | 命令 | 说明 |
 |------|------|
-| `skm install <name> [--link-to <agent\|all>]` | 安装技能（支持注册表名、`owner/repo`、完整 Git URL） |
+| `skm install <name> [--link-to <agent\|all>]` | 安装技能，默认链接到所有 Agent（支持注册表名、`owner/repo`、完整 Git URL） |
 | `skm uninstall <name>` | 卸载技能 |
-| `skm search <keyword>` | 搜索注册表 |
+| `skm search <keyword>` | 搜索注册表（skills.sh API + Git 源本地扫描） |
 | `skm list` | 列出已安装技能 |
 | `skm list --outdated` | 只显示有更新可用的技能 |
 | `skm info <name>` | 查看技能详情 |
@@ -78,7 +79,7 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 | `skm agent list` | 列出已注册 Agent |
 | `skm backup list/restore/delete <name>` | 备份管理 |
 | `skm doctor` | 检测环境健康状态，诊断链接/Agent 问题 |
-| `skm source list/add/remove` | 注册表源管理 |
+| `skm source list/add/remove` | 注册表源管理（支持 skills.sh / GitHub / Git） |
 
 完整文档：[docs/commands.md](docs/commands.md)
 

@@ -4,7 +4,7 @@ displayName: skm — AI Agent 技能包管理器
 description: Local skill package manager for AI Agents. Use when installing,
   uninstalling, searching, linking, or updating AI Agent skills via skm CLI,
   or when running skm scan / relink / doctor commands.
-version: 0.2.0
+version: 0.3.0
 author: mocikadev
 tags: [skm, skill-manager, install, link, update, scan, agent, tooling]
 compatible_agents: [opencode, claude-code, codex, gemini, cursor]
@@ -114,12 +114,18 @@ skm relink cursor   # 将所有已安装技能链接到 cursor
 - `<git-url>` — 完整 Git URL（适用于 GitLab/Gitee 等）
 - `<git-url>#subpath` — 完整 URL + 子目录
 - GitHub 网页 URL — 自动解析仓库和路径
+- `/绝对路径`、`~/路径`、`./相对路径`、`file://` — 本地目录，直接复制，无需 git
 
 ```bash
 skm install mobile-android-design
 skm install mobile-android-design --link-to opencode
 skm install wshobson/agents:mobile-android-design
 skm install https://github.com/wshobson/agents.git --link-to opencode
+
+# 本地路径（直接复制，无需 git）
+skm install ~/dev/my-company-skills
+skm install ~/dev/multi-skills#formatter       # 本地多 skill 目录 + 子目录
+skm install /workspace/skills --link-to opencode
 ```
 
 #### `skm uninstall <NAME>`
@@ -205,10 +211,12 @@ skm source list                                          # 列出所有注册表
 skm source add my-org https://github.com/my-org/skills   # 添加 GitHub 仓库为源
 skm source add private git@github.com:org/private-skills  # SSH 私有仓库
 skm source add gitlab https://gitlab.com/org/skills.git   # 其他 Git 平台
+skm source add dev ~/dev/my-company-skills               # 本地目录作为源
+skm source add local-ws /workspace/shared-skills         # 本地绝对路径
 skm source remove my-org                                  # 移除注册表源
 ```
 
-`skm source add` 会自动检测 URL 类型：`github.com` → `github`，其他含 `://` 或 `git@` → `git`，`skills.sh` → `skills.sh`。GitHub / Git 源的搜索结果会缓存到 `~/.agents/.skm-source-cache/`。
+`skm source add` 会自动检测 URL 类型：`github.com` → `github`，其他含 `://` 或 `git@` → `git`，`skills.sh` → `skills.sh`，本地路径（`/`、`~`、`./`、`../`、`file://`）→ `local`。GitHub / Git 源的搜索结果会缓存到 `~/.agents/.skm-source-cache/`；本地源直接扫描目录。
 
 配置文件：`~/.agents/sources.toml`
 
@@ -223,7 +231,7 @@ skm agent add my-agent ~/.my-agent/skills  # 手动注册自定义 Agent
 
 配置文件：`~/.agents/agents.toml`
 
-内置支持的 Agent：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`
+内置支持的 Agent：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`
 
 ### 备份管理
 

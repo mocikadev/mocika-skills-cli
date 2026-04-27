@@ -17,6 +17,8 @@ pub enum SourceType {
     GitHub,
     #[serde(rename = "git")]
     Git,
+    #[serde(rename = "local")]
+    Local,
 }
 
 impl std::fmt::Display for SourceType {
@@ -25,6 +27,7 @@ impl std::fmt::Display for SourceType {
             SourceType::SkillsSh => write!(f, "skills.sh"),
             SourceType::GitHub => write!(f, "github"),
             SourceType::Git => write!(f, "git"),
+            SourceType::Local => write!(f, "local"),
         }
     }
 }
@@ -213,6 +216,15 @@ fn default_sources() -> SourcesConfig {
 fn detect_source_type(url: &str) -> SourceType {
     if url.to_lowercase().contains("skills.sh") {
         return SourceType::SkillsSh;
+    }
+
+    if url.starts_with('/')
+        || url.starts_with('~')
+        || url.starts_with("./")
+        || url.starts_with("../")
+        || url.starts_with("file://")
+    {
+        return SourceType::Local;
     }
 
     let lower = url.to_lowercase();

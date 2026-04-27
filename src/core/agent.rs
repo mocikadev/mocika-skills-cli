@@ -86,6 +86,46 @@ pub fn definitions() -> Vec<AgentDefinition> {
             display_name: "Trae CN",
             detect_command: "trae-cn",
         },
+        AgentDefinition {
+            id: "windsurf",
+            display_name: "Windsurf",
+            detect_command: "windsurf",
+        },
+        AgentDefinition {
+            id: "augment",
+            display_name: "Augment",
+            detect_command: "augment",
+        },
+        AgentDefinition {
+            id: "kilocode",
+            display_name: "KiloCode",
+            detect_command: "kilocode",
+        },
+        AgentDefinition {
+            id: "ob1",
+            display_name: "OB1",
+            detect_command: "ob1",
+        },
+        AgentDefinition {
+            id: "amp",
+            display_name: "Amp",
+            detect_command: "amp",
+        },
+        AgentDefinition {
+            id: "hermes",
+            display_name: "Hermes",
+            detect_command: "hermes",
+        },
+        AgentDefinition {
+            id: "factory-droid",
+            display_name: "Factory Droid",
+            detect_command: "factory-droid",
+        },
+        AgentDefinition {
+            id: "qwen",
+            display_name: "Qwen",
+            detect_command: "qwen",
+        },
     ]
 }
 
@@ -170,6 +210,14 @@ pub fn skills_dir_for(agent_id: &str) -> Result<PathBuf> {
         "junie" => home.join(".junie").join("skills"),
         "qoder" => home.join(".qoder").join("skills"),
         "trae-cn" => home.join(".trae-cn").join("skills"),
+        "windsurf" => home.join(".windsurf").join("skills"),
+        "augment" => home.join(".augment").join("skills"),
+        "kilocode" => home.join(".kilocode").join("skills"),
+        "ob1" => home.join(".ob1").join("skills"),
+        "amp" => home.join(".amp").join("skills"),
+        "hermes" => home.join(".hermes").join("skills"),
+        "factory-droid" => home.join(".factory").join("skills"),
+        "qwen" => home.join(".qwen").join("skills"),
         _ => return Err(anyhow!("unsupported agent id: {agent_id}")),
     };
     Ok(path)
@@ -192,6 +240,14 @@ pub fn config_dir_for(agent_id: &str) -> Result<PathBuf> {
         "junie" => home.join(".junie"),
         "qoder" => home.join(".qoder"),
         "trae-cn" => home.join(".trae-cn"),
+        "windsurf" => home.join(".windsurf"),
+        "augment" => home.join(".augment"),
+        "kilocode" => home.join(".kilocode"),
+        "ob1" => home.join(".ob1"),
+        "amp" => home.join(".amp"),
+        "hermes" => home.join(".hermes"),
+        "factory-droid" => home.join(".factory"),
+        "qwen" => home.join(".qwen"),
         _ => return Err(anyhow!("unsupported agent id: {agent_id}")),
     };
     Ok(path)

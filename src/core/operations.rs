@@ -154,6 +154,113 @@ where
     result
 }
 
+pub fn install_skill_from_local_with_progress<P>(
+    local_path: &str,
+    skill_subpath: Option<String>,
+    target_agents: &[String],
+    mut progress: P,
+) -> Result<SkillSummary>
+where
+    P: FnMut(&str, usize, usize),
+{
+    use crate::core::config::expand_tilde;
+
+    let expanded = expand_tilde(local_path.trim());
+    let source_dir = PathBuf::from(&expanded);
+
+    let total = 4;
+
+    progress("scanning repository", 0, total);
+    let discovered = discover_skill_directories(&source_dir, 6)?;
+    let discovered_candidates = discovered
+        .iter()
+        .filter_map(|path| path.strip_prefix(&source_dir).ok())
+        .map(|path| path.to_string_lossy().replace('\\', "/"))
+        .collect::<Vec<_>>();
+
+    let chosen_dir = match skill_subpath {
+        Some(subpath) if !subpath.trim().is_empty() => {
+            let requested = subpath.trim();
+            let direct = source_dir.join(requested);
+            if direct.exists() && direct.join(SKILL_FILE_NAME).exists() {
+                direct
+            } else if discovered.is_empty() {
+                bail!("no skill directory found in local path; provide skillSubpath");
+            } else if let Some(resolved) =
+                resolve_skill_directory_from_selector(&source_dir, &discovered, requested)?
+            {
+                resolved
+            } else {
+                bail!(
+                    "skillSubpath '{}' not found. Available skills: {}",
+                    requested,
+                    discovered_candidates.join(", ")
+                );
+            }
+        }
+        _ => {
+            if discovered.is_empty() {
+                bail!("no skill directory found in: {expanded}");
+            }
+            if discovered.len() > 1 {
+                bail!(
+                    "multiple skills found; provide skillSubpath. Candidates: {}",
+                    discovered_candidates.join(", ")
+                );
+            }
+            discovered[0].clone()
+        }
+    };
+    progress("scanning repository", 1, total);
+
+    progress("copying skill files", 1, total);
+    let skill_id = if is_repo_root_path(&source_dir, &chosen_dir) {
+        derive_skill_id(&source_dir)?
+    } else {
+        derive_skill_id(&chosen_dir)?
+    };
+    let destination = shared_skill_path(&skill_id)?;
+    replace_directory(&chosen_dir, &destination)?;
+    progress("copying skill files", 2, total);
+
+    progress("creating symlinks", 2, total);
+    for agent_id in target_agents {
+        assign_skill(&skill_id, agent_id)?;
+    }
+    progress("creating symlinks", 3, total);
+
+    progress("writing lock file", 3, total);
+    let hash = compute_directory_hash(&destination)?;
+    let now = lock::now_rfc3339();
+    let relative_skill_dir = chosen_dir.strip_prefix(&source_dir).unwrap_or(&chosen_dir);
+    let relative_skill_path =
+        if relative_skill_dir.as_os_str().is_empty() || relative_skill_dir == Path::new(".") {
+            SKILL_FILE_NAME.to_string()
+        } else {
+            relative_skill_dir
+                .join(SKILL_FILE_NAME)
+                .to_string_lossy()
+                .replace('\\', "/")
+        };
+
+    let lock_entry = serde_json::json!({
+        "source": local_path.trim(),
+        "sourceType": "local",
+        "sourceUrl": local_path.trim(),
+        "skillPath": relative_skill_path,
+        "skillFolderHash": hash,
+        "installedAt": now,
+        "updatedAt": now,
+        "skillyCommitHash": null
+    });
+
+    lock::upsert_skill_entry(&skill_id, lock_entry)?;
+    progress("writing lock file", 4, total);
+
+    skill::find_skill_summary(&skill_id)?
+        .ok_or_else(|| anyhow!("skill installed but scan failed: {skill_id}"))
+}
+
 pub fn discover_repo_skill_subpaths(repo_url: &str) -> Result<Vec<String>> {
     git::ensure_git_available()?;
     let temp = create_temp_dir()?;
@@ -345,7 +452,6 @@ pub fn check_all_updates() -> Result<Vec<UpdateCheck>> {
 }
 
 pub fn update_skill(skill_id: &str) -> Result<SkillSummary> {
-    git::ensure_git_available()?;
     let entry = lock::get_skill_entry(skill_id)?
         .ok_or_else(|| anyhow!("skill is not tracked in lock file: {skill_id}"))?;
 
@@ -354,6 +460,13 @@ pub fn update_skill(skill_id: &str) -> Result<SkillSummary> {
         .and_then(|value| value.as_str())
         .unwrap_or_default();
     let source_url = entry.get("sourceUrl").and_then(|value| value.as_str());
+
+    if source_type == "local" {
+        return update_skill_from_local(skill_id, &entry);
+    }
+
+    git::ensure_git_available()?;
+
     if !supports_remote_update_source_type(source_type, source_url) {
         let source_type_display = if source_type.is_empty() {
             "unknown"
@@ -433,6 +546,73 @@ pub fn update_skill(skill_id: &str) -> Result<SkillSummary> {
 
     let _cleanup = fs::remove_dir_all(&temp);
     result
+}
+
+fn update_skill_from_local(skill_id: &str, entry: &serde_json::Value) -> Result<SkillSummary> {
+    use crate::core::config::expand_tilde;
+
+    let source_url = entry
+        .get("sourceUrl")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow!("lock entry missing sourceUrl"))?;
+    let skill_path = entry
+        .get("skillPath")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow!("lock entry missing skillPath"))?;
+
+    let folder_rel_path = if skill_path == SKILL_FILE_NAME {
+        String::new()
+    } else {
+        skill_path
+            .trim_end_matches(&format!("/{SKILL_FILE_NAME}"))
+            .to_string()
+    };
+
+    let expanded = expand_tilde(source_url.trim());
+    let source_root = PathBuf::from(&expanded);
+    let source_dir = if folder_rel_path.is_empty() {
+        source_root.clone()
+    } else {
+        source_root.join(&folder_rel_path)
+    };
+
+    if !source_dir.exists() || !source_dir.join(SKILL_FILE_NAME).exists() {
+        bail!(
+            "local source path no longer contains expected skill: {}",
+            source_dir.display()
+        );
+    }
+
+    let destination = shared_skill_path(skill_id)?;
+    let snapshot = if destination.exists() {
+        Some(create_backup_snapshot(skill_id, &destination)?)
+    } else {
+        None
+    };
+
+    if let Err(error) = replace_directory(&source_dir, &destination) {
+        if let Some(snapshot) = snapshot.as_ref() {
+            let _rollback = restore_backup_snapshot(skill_id, &snapshot.snapshot_id);
+        }
+        return Err(error).context("failed to replace skill directory");
+    }
+
+    let new_hash = compute_directory_hash(&destination)?;
+    let now = lock::now_rfc3339();
+
+    let mut updated = entry.clone();
+    updated["skillFolderHash"] = serde_json::Value::String(new_hash);
+    updated["updatedAt"] = serde_json::Value::String(now);
+
+    if let Err(error) = lock::upsert_skill_entry(skill_id, updated) {
+        if let Some(snapshot) = snapshot.as_ref() {
+            let _rollback = restore_backup_snapshot(skill_id, &snapshot.snapshot_id);
+        }
+        return Err(error).context("failed to update lock entry after applying update");
+    }
+
+    skill::find_skill_summary(skill_id)?
+        .ok_or_else(|| anyhow!("skill updated but scan failed: {skill_id}"))
 }
 
 pub fn list_all_backups() -> Result<Vec<SkillBackup>> {

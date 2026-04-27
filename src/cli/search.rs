@@ -29,6 +29,9 @@ pub fn run(args: SearchArgs) -> Result<()> {
             config::SourceType::GitHub | config::SourceType::Git => {
                 registry::search_git_source(&source.url, &args.keyword, args.limit)?
             }
+            config::SourceType::Local => {
+                registry::search_local_source(&source.url, &args.keyword, args.limit)?
+            }
         };
         for skill in skills {
             merged.entry(skill.id.clone()).or_insert(skill);

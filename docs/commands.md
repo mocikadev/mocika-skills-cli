@@ -1,6 +1,6 @@
 # skm 命令参考
 
-> 版本：0.2  
+> 版本：0.3  
 > 二进制：`skm`（Windows 为 `skm.exe`）
 
 ---
@@ -59,9 +59,14 @@ skm install <NAME> [--link-to <AGENT>]
 | `<git-url>` | 完整 Git URL，安装仓库根目录（支持 https / ssh） | `https://github.com/wshobson/agents.git` |
 | `<git-url>#subpath` | 完整 Git URL + `#` 指定子目录 | `https://github.com/myorg/skills.git#tools/formatter` |
 | GitHub 网页 URL | 直接粘贴 GitHub 页面地址，自动解析仓库和子目录 | `https://github.com/myorg/skills/tree/main/formatter` |
+| `/absolute/path` | 本地绝对路径 | `/home/user/my-skills` |
+| `~/path` | 本地 `~` 展开路径 | `~/dev/company-skills` |
+| `./relative` / `../relative` | 本地相对路径 | `./skills` |
+| `file:///path` | file:// URI | `file:///home/user/my-skills` |
 
 > `owner/repo` 格式固定解析为 GitHub（`github.com`）。  
-> GitLab、Gitee 等平台请使用完整 Git URL 格式。
+> GitLab、Gitee 等平台请使用完整 Git URL 格式。  
+> 本地路径直接复制文件，无需 git。
 
 **示例**
 
@@ -87,6 +92,12 @@ skm install https://github.com/myorg/skills.git#tools/formatter
 
 # 直接粘贴 GitHub 网页地址（含 /tree/branch/path）
 skm install https://github.com/myorg/skills/tree/main/tools/formatter
+
+# 本地路径（直接复制，无需 git）
+skm install ~/dev/my-company-skills
+skm install ~/dev/multi-skills#formatter       # 本地多 skill 仓库 + 子目录
+skm install /workspace/skills --link-to opencode
+skm install ./local-skills                     # 相对路径
 ```
 
 **成功输出**
@@ -122,7 +133,7 @@ uninstalled mobile-android-design
 
 ### `skm search`
 
-在已配置的所有注册表中搜索技能。`skills.sh` 源通过 HTTP API 搜索；GitHub / Git 源通过本地缓存扫描 SKILL.md 匹配关键词（首次需 `git clone`，之后 5 分钟内命中缓存，超时增量 `git fetch`）。
+在已配置的所有注册表中搜索技能。`skills.sh` 源通过 HTTP API 搜索；GitHub / Git 源通过本地缓存扫描 SKILL.md 匹配关键词（首次需 `git clone`，之后 5 分钟内命中缓存，超时增量 `git fetch`）；本地源直接扫描本地目录。
 
 ```
 skm search <KEYWORD> [--limit <N>]
@@ -310,14 +321,15 @@ skm source list
 
 添加自定义技能注册表。URL 会自动检测类型：
 
-| URL 形式 | 类型 | 搜索方式 |
-|----------|------|----------|
+| URL / 路径形式 | 类型 | 搜索方式 |
+|----------------|------|----------|
 | `https://skills.sh` | `skills.sh` | HTTP API |
-| `https://github.com/…` / `git@github.com:…` / `owner/repo` | `github` | git clone + 扫描 |
-| 其他 `https://` / `git@` URL（GitLab、私有 Git 等） | `git` | git clone + 扫描 |
+| `https://github.com/…` / `git@github.com:…` / `owner/repo` | `github` | git clone + 扫描（本地缓存） |
+| 其他 `https://` / `git@` URL（GitLab、私有 Git 等） | `git` | git clone + 扫描（本地缓存） |
+| `/绝对路径`、`~/路径`、`./相对路径`、`../..`、`file://` | `local` | 直接扫描本地目录 |
 
 ```
-skm source add <NAME> <URL>
+skm source add <NAME> <URL|PATH>
 ```
 
 **示例**
@@ -326,6 +338,10 @@ skm source add <NAME> <URL>
 skm source add my-org https://github.com/my-org/my-skills
 skm source add private git@github.com:myorg/private-skills
 skm source add gitlab-skills https://gitlab.com/myorg/skills.git
+
+# 本地目录作为源（支持 ~、绝对路径、相对路径）
+skm source add dev ~/dev/my-company-skills
+skm source add local-ws /workspace/shared-skills
 ```
 
 ### `skm source remove`
@@ -360,7 +376,7 @@ skm scan [--dry-run]
 3. Skills 目录存在（如 `~/.claude/skills/`）
 4. Skills 目录内有技能包
 
-**内置支持的 Agent**：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`
+**内置支持的 Agent**：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`
 
 ### `skm agent list`
 

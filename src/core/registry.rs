@@ -971,6 +971,23 @@ fn search_in_dir(
     Ok(results)
 }
 
+pub fn search_local_source(
+    source_path: &str,
+    keyword: &str,
+    limit: usize,
+) -> Result<Vec<RegistrySkill>> {
+    use crate::core::config::expand_tilde;
+    let expanded = expand_tilde(source_path.trim());
+    let dir = std::path::Path::new(&expanded);
+    if !dir.exists() {
+        anyhow::bail!("local source path does not exist: {expanded}");
+    }
+    if !dir.is_dir() {
+        anyhow::bail!("local source path is not a directory: {expanded}");
+    }
+    search_in_dir(dir, source_path.trim(), keyword, limit)
+}
+
 pub fn search_git_source(
     source_url: &str,
     keyword: &str,

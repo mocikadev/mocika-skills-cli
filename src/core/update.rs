@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use super::{operations, skill};
+use super::{lock, operations};
 use crate::models::UpdateCheck;
 
 pub fn check_updates(skill_ids: &[String]) -> Result<Vec<UpdateCheck>> {
@@ -17,8 +17,8 @@ pub fn check_updates(skill_ids: &[String]) -> Result<Vec<UpdateCheck>> {
 }
 
 pub fn installed_skill_ids() -> Result<Vec<String>> {
-    Ok(skill::scan_skills()?
+    Ok(lock::list_skill_entries()?
         .into_iter()
-        .map(|item| item.id)
+        .map(|(id, _)| id)
         .collect())
 }

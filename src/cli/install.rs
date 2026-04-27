@@ -25,14 +25,26 @@ pub fn run(args: InstallArgs) -> Result<()> {
         spinner.set_style(template);
     }
 
-    let summary = operations::install_skill_from_repo_with_progress(
-        &repo_url,
-        skill_subpath,
-        &target_agents,
-        |message, done, total| {
-            spinner.set_message(i18n::fmt_progress(message, done, total));
-        },
-    )?;
+    let summary = if repo_url.starts_with("local://") {
+        let local_path = repo_url.trim_start_matches("local://");
+        operations::install_skill_from_local_with_progress(
+            local_path,
+            skill_subpath,
+            &target_agents,
+            |message, done, total| {
+                spinner.set_message(i18n::fmt_progress(message, done, total));
+            },
+        )?
+    } else {
+        operations::install_skill_from_repo_with_progress(
+            &repo_url,
+            skill_subpath,
+            &target_agents,
+            |message, done, total| {
+                spinner.set_message(i18n::fmt_progress(message, done, total));
+            },
+        )?
+    };
     spinner.finish_and_clear();
 
     println!(
@@ -99,6 +111,7 @@ fn resolve_install_source(input: &str) -> Result<(String, Option<String>)> {
             config::SourceType::GitHub | config::SourceType::Git => {
                 registry::search_git_source(&source.url, query, 20)?
             }
+            config::SourceType::Local => registry::search_local_source(&source.url, query, 20)?,
         };
         let best = matches
             .iter()
@@ -141,10 +154,34 @@ fn resolve_target_agents(link_to: Option<&str>) -> Result<Vec<String>> {
     }
 }
 
+fn is_local_path(s: &str) -> bool {
+    s.starts_with('/')
+        || s.starts_with('~')
+        || s.starts_with("./")
+        || s.starts_with("../")
+        || s.starts_with("file://")
+}
+
 fn parse_direct_repo_target(input: &str) -> Option<(String, Option<String>)> {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return None;
+    }
+
+    if is_local_path(trimmed) {
+        let path = trimmed.strip_prefix("file://").unwrap_or(trimmed);
+        if let Some((path_part, subpath)) = path.split_once('#') {
+            let subpath = subpath.trim();
+            return Some((
+                format!("local://{}", path_part.trim()),
+                if subpath.is_empty() {
+                    None
+                } else {
+                    Some(subpath.to_string())
+                },
+            ));
+        }
+        return Some((format!("local://{path}"), None));
     }
 
     if trimmed.contains("://") || trimmed.starts_with("git@") {
@@ -225,6 +262,13 @@ fn parse_github_web_url(url: &str) -> Option<(String, Option<String>)> {
 
 fn registry_source_to_repo_url(source: &str) -> String {
     let trimmed = source.trim();
+    if trimmed.starts_with('/')
+        || trimmed.starts_with('~')
+        || trimmed.starts_with("./")
+        || trimmed.starts_with("../")
+    {
+        return format!("local://{trimmed}");
+    }
     if trimmed.contains("://") || trimmed.starts_with("git@") {
         trimmed.to_string()
     } else {

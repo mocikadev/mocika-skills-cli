@@ -10,7 +10,8 @@ AI Agent 技能包本地管理 CLI。统一管理多个 AI Agent 的技能包安
 ## 特性
 
 - **统一安装**：一条命令从 [skills.sh](https://skills.sh) 安装技能，Git 仓库直装同样支持
-- **多源搜索**：`skm source add` 注册任意 GitHub / GitLab / 私有 Git 仓库为技能源，`skm search` 跨源搜索
+- **多源搜索**：`skm source add` 注册任意 GitHub / GitLab / 私有 Git 仓库或**本地目录**为技能源，`skm search` 跨源搜索
+- **本地源支持**：直接将本地文件系统目录注册为源，或通过本地路径直接安装技能，无需 git
 - **多 Agent 部署**：软链接机制，一份技能文件同时服务多个 Agent
 - **自动检测**：`skm scan` 检测本机已安装的 AI Agent，无需手动配置
 - **锁文件共享**：与 skilly GUI 共用 `~/.agents/.skill-lock.json`，数据互通
@@ -89,7 +90,7 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 | `skm agent list` | 列出已注册 Agent |
 | `skm backup list/restore/delete <name>` | 备份管理 |
 | `skm doctor` | 检测环境健康状态，诊断链接/Agent 问题 |
-| `skm source list/add/remove` | 注册表源管理（支持 skills.sh / GitHub / Git） |
+| `skm source list/add/remove` | 注册表源管理（支持 skills.sh / GitHub / Git / 本地目录） |
 
 完整文档：[docs/commands.md](docs/commands.md)
 
@@ -106,7 +107,7 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 
 ## 支持的 Agent
 
-`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity`
+`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen`
 
 未列出的 Agent 可通过 `skm agent add` 手动注册。
 

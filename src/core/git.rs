@@ -46,6 +46,8 @@ pub fn is_git_repo(dir: &Path) -> bool {
 fn run_git(args: &[&str], cwd: Option<&Path>) -> Result<String> {
     let mut command = Command::new("git");
     command.args(args);
+    command.env("GIT_TERMINAL_PROMPT", "0");
+    command.env("GIT_ASKPASS", "echo");
     if let Some(cwd) = cwd {
         command.current_dir(cwd);
     }

@@ -356,7 +356,7 @@ pub fn fmt_relink_result(linked: usize, conflicts: usize, skipped: usize) -> Str
 }
 
 pub fn fmt_progress(step_key: &str, done: usize, total: usize) -> String {
-    format!("{} ({done}/{total})", t(step_key))
+    format!("{} ({}/{total})", t(step_key), done + 1)
 }
 
 pub fn fmt_unlinked_from(name: &str, agent_id: &str) -> String {

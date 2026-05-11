@@ -49,6 +49,8 @@ pub fn run() -> Result<()> {
         cli::Commands::Config(cmd) => cli::config_cmd::run(cmd),
         cli::Commands::SelfUpdate(args) => cli::self_update::run(args),
         cli::Commands::Doctor(args) => cli::doctor::run(args),
+        cli::Commands::Export(args) => cli::export::run(args),
+        cli::Commands::Import(args) => cli::import::run(args),
     }
 }
 
@@ -116,6 +118,7 @@ fn build_i18n_cmd() -> clap::Command {
                 .disable_help_flag(true)
                 .arg(h())
                 .mut_arg("dry_run", |a| opt(a, "arg.scan.dry-run"))
+                .mut_arg("import", |a| opt(a, "arg.scan.import"))
         })
         .mut_subcommand("relink", |c| {
             c.about(t("cmd.relink"))
@@ -278,7 +281,40 @@ fn build_i18n_cmd() -> clap::Command {
         .mut_subcommand("doctor", |c| {
             c.about(t("cmd.doctor"))
                 .help_template(tmpl())
+                .subcommand_help_heading(t("heading.commands"))
                 .disable_help_flag(true)
                 .arg(h())
+                .mut_subcommand("fix-skills", |c| {
+                    c.about(t("cmd.doctor.fix-skills"))
+                        .help_template(tmpl())
+                        .disable_help_flag(true)
+                        .arg(h())
+                        .mut_arg("dry_run", |a| opt(a, "arg.doctor.fix-skills.dry-run"))
+                })
+                .mut_subcommand("sync", |c| {
+                    c.about(t("cmd.doctor.sync"))
+                        .help_template(tmpl())
+                        .disable_help_flag(true)
+                        .arg(h())
+                        .mut_arg("agent", |a| opt(a, "arg.doctor.sync.agent"))
+                        .mut_arg("dry_run", |a| opt(a, "arg.doctor.sync.dry-run"))
+                        .mut_arg("force", |a| opt(a, "arg.doctor.sync.force"))
+                })
+        })
+        .mut_subcommand("export", |c| {
+            c.about(t("cmd.export"))
+                .help_template(tmpl())
+                .disable_help_flag(true)
+                .arg(h())
+                .mut_arg("output", |a| opt(a, "arg.export.output"))
+        })
+        .mut_subcommand("import", |c| {
+            c.about(t("cmd.import"))
+                .help_template(tmpl())
+                .disable_help_flag(true)
+                .arg(h())
+                .mut_arg("file", |a| pos(a, "arg.import.file"))
+                .mut_arg("link_to", |a| opt(a, "arg.import.link-to"))
+                .mut_arg("force", |a| opt(a, "arg.import.force"))
         })
 }

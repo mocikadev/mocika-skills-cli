@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use super::{agent, config, lock};
-use crate::models::{LinkState, SkillDetail, SkillSummary};
+use crate::models::{LinkState, SkillDetail, SkillFixResult, SkillSummary};
 
 #[derive(Debug, Clone)]
 struct SkillAggregate {
@@ -199,4 +199,149 @@ fn resolve_scope(canonical_path: &str) -> &'static str {
         }
     }
     "agent_local"
+}
+
+pub fn fix_skill_frontmatter(skill_id: &str, dry_run: bool) -> Result<SkillFixResult> {
+    let skill_dir = agent::shared_skills_dir()?.join(skill_id);
+    let skill_md_path = skill_dir.join("SKILL.md");
+
+    if !skill_md_path.exists() {
+        return Ok(SkillFixResult {
+            skill_id: skill_id.to_string(),
+            fixed: vec![],
+            warnings: vec!["SKILL.md not found".to_string()],
+            applied: false,
+        });
+    }
+
+    let content = fs::read_to_string(&skill_md_path)?;
+    let (new_content, fixed, warnings) = analyze_and_fix(skill_id, &content);
+
+    let has_fixes = !fixed.is_empty();
+    let applied = if has_fixes && !dry_run {
+        fs::write(&skill_md_path, new_content.as_bytes())?;
+        true
+    } else {
+        false
+    };
+
+    Ok(SkillFixResult {
+        skill_id: skill_id.to_string(),
+        fixed,
+        warnings,
+        applied,
+    })
+}
+
+fn analyze_and_fix(skill_id: &str, content: &str) -> (String, Vec<String>, Vec<String>) {
+    let mut fixed = Vec::new();
+    let mut warnings = Vec::new();
+
+    if !content.starts_with("---\n") {
+        fixed.push("added frontmatter with name field".to_string());
+        return (
+            format!("---\nname: {skill_id}\n---\n\n{content}"),
+            fixed,
+            warnings,
+        );
+    }
+
+    let rest = &content[4..];
+    let (end_idx, sep_len) = if let Some(idx) = rest.find("\n---\n") {
+        (idx, 5usize)
+    } else if rest.ends_with("\n---") {
+        (rest.len() - 4, 4usize)
+    } else {
+        warnings.push("malformed frontmatter: missing closing ---".to_string());
+        return (content.to_string(), fixed, warnings);
+    };
+
+    let yaml_str = &rest[..end_idx];
+    let after_fm = &rest[end_idx + sep_len..];
+
+    match serde_yaml::from_str::<serde_yaml::Value>(yaml_str) {
+        Err(e) => {
+            warnings.push(format!("YAML parse error (skipped): {e}"));
+            (content.to_string(), fixed, warnings)
+        }
+        Ok(yaml_val) => {
+            let mut yaml_lines: Vec<String> = yaml_str.lines().map(|l| l.to_string()).collect();
+            let name_opt = yaml_val.get("name").and_then(|v| v.as_str());
+
+            match name_opt {
+                None => {
+                    yaml_lines.insert(0, format!("name: {skill_id}"));
+                    fixed.push("added missing name field".to_string());
+                }
+                Some(name) if name != skill_id => {
+                    for line in yaml_lines.iter_mut() {
+                        if line.trim_start().starts_with("name:") {
+                            *line = format!("name: {skill_id}");
+                            break;
+                        }
+                    }
+                    fixed.push(format!("corrected name: \"{name}\" → \"{skill_id}\""));
+                }
+                _ => {}
+            }
+
+            let new_yaml = yaml_lines.join("\n");
+            (format!("---\n{new_yaml}\n---\n{after_fm}"), fixed, warnings)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::analyze_and_fix;
+
+    #[test]
+    fn no_frontmatter_prepends_block_with_name() {
+        let content = "# Hello\nsome content\n";
+        let (new_content, fixed, warnings) = analyze_and_fix("my-skill", content);
+        assert!(warnings.is_empty());
+        assert_eq!(fixed, vec!["added frontmatter with name field"]);
+        assert!(new_content.starts_with("---\nname: my-skill\n---\n"));
+        assert!(new_content.contains("# Hello"));
+    }
+
+    #[test]
+    fn missing_name_field_gets_added() {
+        let content = "---\ndescription: a skill\n---\n# Body\n";
+        let (new_content, fixed, warnings) = analyze_and_fix("my-skill", content);
+        assert!(warnings.is_empty());
+        assert_eq!(fixed, vec!["added missing name field"]);
+        assert!(new_content.contains("name: my-skill"));
+        assert!(new_content.contains("description: a skill"));
+    }
+
+    #[test]
+    fn wrong_name_gets_corrected() {
+        let content = "---\nname: old-name\ndescription: a skill\n---\n# Body\n";
+        let (new_content, fixed, warnings) = analyze_and_fix("correct-name", content);
+        assert!(warnings.is_empty());
+        assert_eq!(
+            fixed,
+            vec!["corrected name: \"old-name\" → \"correct-name\""]
+        );
+        assert!(new_content.contains("name: correct-name"));
+        assert!(!new_content.contains("name: old-name"));
+    }
+
+    #[test]
+    fn correct_name_produces_no_changes() {
+        let content = "---\nname: my-skill\ndescription: a skill\n---\n# Body\n";
+        let (_, fixed, warnings) = analyze_and_fix("my-skill", content);
+        assert!(fixed.is_empty());
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn missing_closing_delimiter_emits_warning() {
+        let content = "---\nname: my-skill\n";
+        let (returned_content, fixed, warnings) = analyze_and_fix("my-skill", content);
+        assert!(fixed.is_empty());
+        assert!(!warnings.is_empty());
+        assert_eq!(returned_content, content);
+    }
 }

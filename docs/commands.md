@@ -1,6 +1,6 @@
 # skm 命令参考
 
-> 版本：0.3  
+> 版本：0.4.0  
 > 二进制：`skm`（Windows 为 `skm.exe`）
 
 ---
@@ -305,6 +305,75 @@ relink 12 linked, 0 conflicts, 1 skipped
 warn conflict: mobile-android-design in cursor (skipped, use --force to overwrite)
 ```
 
+### `skm export`
+
+将所有已安装技能（来源为 Git / GitHub / 注册表）导出为可分享的 `.bundle` 文件。本地路径来源的技能自动跳过。
+
+```
+skm export [--output <FILE>]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--output <FILE>` | 输出路径（默认：当前目录的 `skills.bundle`） |
+
+**输出格式**（TOML）
+
+```toml
+[meta]
+exported_by = "skm/0.3.2"
+exported_at = "2026-05-11"
+
+[[skills]]
+name = "mobile-android-design"
+source = "wshobson/agents:mobile-android-design"
+
+[[skills]]
+name = "rust-skills"
+source = "someuser/rust-skills"
+```
+
+**示例**
+
+```bash
+skm export                                  # → ./skills.bundle
+skm export --output ~/dotfiles/skills.bundle
+```
+
+---
+
+### `skm import`
+
+从 `.bundle` 文件批量安装技能。已安装的技能默认跳过（幂等），`--force` 强制覆盖。
+
+```
+skm import <FILE> [--link-to <AGENT|all>] [--force]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `FILE` | `.bundle` 文件路径 |
+| `--link-to <AGENT\|all>` | 链接目标（默认：`all`，链接到所有已安装 Agent） |
+| `--force` | 强制重装已安装的技能（覆盖） |
+
+**示例**
+
+```bash
+skm import skills.bundle
+skm import skills.bundle --link-to opencode
+skm import skills.bundle --force            # 强制重装所有条目
+```
+
+**输出示例**
+
+```
+importing 3 skills...
+  ✓ mobile-android-design   installed
+  → rust-skills             already installed, skipped
+  ✓ skm                     installed
+done: 2 installed, 1 skipped
+```
+
 ---
 
 ## 注册表管理
@@ -363,12 +432,13 @@ skm source remove <NAME>
 自动检测本机已安装的 AI Agent，将结果写入 `agents.toml`（已存在的条目不覆盖）。
 
 ```
-skm scan [--dry-run]
+skm scan [--dry-run] [--import <FILE>]
 ```
 
 | 参数 | 说明 |
 |------|------|
 | `--dry-run` | 仅预览检测结果，不写入配置 |
+| `--import <FILE>` | 扫描完成后同时从 bundle 文件导入技能（`--dry-run` 时跳过 import） |
 
 检测采用四信号机制（任一为真即认为已安装）：
 1. 命令存在于 `PATH`
@@ -376,7 +446,7 @@ skm scan [--dry-run]
 3. Skills 目录存在（如 `~/.claude/skills/`）
 4. Skills 目录内有技能包
 
-**内置支持的 Agent**：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`
+**内置支持的 Agent**：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`、`cline`、`roo`、`goose`、`continue`、`warp`、`openhands`、`firebender`、`zencoder`、`cortex`、`deepagents`、`crush`、`kimi-cli`、`mux`、`neovate`、`mistral-vibe`、`pochi`、`openclaude-ide`、`kode`、`mcpjam`、`bob`、`adal`、`pi`、`iflow-cli`、`command-code`
 
 ### `skm agent list`
 
@@ -525,6 +595,7 @@ skm doctor
 - **环境**：共享技能目录是否存在、锁文件和 agents.toml 是否可读
 - **Agent**：agents.toml 中注册的每个 Agent 是否仍已安装（失效条目提示运行 `skm scan` 清理）
 - **链接**：锁文件中的每个技能在每个注册 Agent 下的链接状态（已链接 / 未链接 / 冲突）
+- **完整性**：对比安装时记录的 `computedHash` 与当前目录内容的 SHA256，检测本地是否被意外修改
 
 **退出码**：所有检查通过返回 0，存在问题返回 1。
 
@@ -549,4 +620,69 @@ Agents (2)
 Links (1 issue(s))
   ✓  rust-skills           opencode    linked
   ✗  rust-skills           kiro        not linked
+```
+
+---
+
+### `skm doctor fix-skills`
+
+扫描中央仓库所有已安装技能的 `SKILL.md`，自动修复 frontmatter 格式问题。
+
+```
+skm doctor fix-skills [--dry-run]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--dry-run` | 仅报告问题，不写入文件 |
+
+可修复的问题：
+- 缺少 `---` frontmatter 分隔符
+- 缺少 `name` 字段（用目录名补填）
+- `name` 字段与目录名不一致（修正为目录名）
+
+不可自动修复（仅报告）：
+- frontmatter 不是合法 YAML
+
+**示例**
+
+```bash
+skm doctor fix-skills
+skm doctor fix-skills --dry-run
+```
+
+---
+
+### `skm doctor sync`
+
+扫描所有 Agent 的 skills 目录，清理悬空软链接（broken），并为缺失链接补建软链接（orphan）。
+
+```
+skm doctor sync [--agent <ID>] [--dry-run] [--force]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--agent <ID>` | 只处理指定 Agent（默认处理所有已注册 Agent） |
+| `--dry-run` | 预览操作，不实际执行 |
+| `--force` | 冲突的普通文件/目录也强制覆盖为软链接 |
+
+**处理逻辑**：
+- **broken**（软链接目标不存在）→ 删除悬空链接（fixed++）
+- **orphan**（中央仓库有 skill 但 Agent 无链接）→ 补建软链接（linked++）
+- **conflict**（普通文件/目录，非软链接）→ 报告，不处理（加 `--force` 则覆盖）
+
+**示例**
+
+```bash
+skm doctor sync
+skm doctor sync --dry-run
+skm doctor sync --agent opencode --force
+```
+
+**输出示例**
+
+```
+Sync Links
+  → 2 fixed, 3 linked, 0 conflict(s), 10 ok
 ```

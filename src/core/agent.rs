@@ -126,6 +126,126 @@ pub fn definitions() -> Vec<AgentDefinition> {
             display_name: "Qwen",
             detect_command: "qwen",
         },
+        AgentDefinition {
+            id: "cline",
+            display_name: "Cline",
+            detect_command: "cline",
+        },
+        AgentDefinition {
+            id: "roo",
+            display_name: "Roo Code",
+            detect_command: "roo",
+        },
+        AgentDefinition {
+            id: "goose",
+            display_name: "Goose",
+            detect_command: "goose",
+        },
+        AgentDefinition {
+            id: "continue",
+            display_name: "Continue",
+            detect_command: "continue",
+        },
+        AgentDefinition {
+            id: "warp",
+            display_name: "Warp",
+            detect_command: "warp",
+        },
+        AgentDefinition {
+            id: "openhands",
+            display_name: "OpenHands",
+            detect_command: "openhands",
+        },
+        AgentDefinition {
+            id: "firebender",
+            display_name: "Firebender",
+            detect_command: "firebender",
+        },
+        AgentDefinition {
+            id: "zencoder",
+            display_name: "Zencoder",
+            detect_command: "zencoder",
+        },
+        AgentDefinition {
+            id: "cortex",
+            display_name: "Cortex Code",
+            detect_command: "cortex",
+        },
+        AgentDefinition {
+            id: "deepagents",
+            display_name: "Deep Agents",
+            detect_command: "deepagents",
+        },
+        AgentDefinition {
+            id: "crush",
+            display_name: "Crush",
+            detect_command: "crush",
+        },
+        AgentDefinition {
+            id: "kimi-cli",
+            display_name: "Kimi CLI",
+            detect_command: "kimi",
+        },
+        AgentDefinition {
+            id: "mux",
+            display_name: "Mux",
+            detect_command: "mux",
+        },
+        AgentDefinition {
+            id: "neovate",
+            display_name: "Neovate",
+            detect_command: "neovate",
+        },
+        AgentDefinition {
+            id: "mistral-vibe",
+            display_name: "Mistral Vibe",
+            detect_command: "vibe",
+        },
+        AgentDefinition {
+            id: "pochi",
+            display_name: "Pochi",
+            detect_command: "pochi",
+        },
+        AgentDefinition {
+            id: "openclaude-ide",
+            display_name: "OpenClaude IDE",
+            detect_command: "openclaude",
+        },
+        AgentDefinition {
+            id: "kode",
+            display_name: "Kode",
+            detect_command: "kode",
+        },
+        AgentDefinition {
+            id: "mcpjam",
+            display_name: "MCPJam",
+            detect_command: "mcpjam",
+        },
+        AgentDefinition {
+            id: "bob",
+            display_name: "IBM Bob",
+            detect_command: "bob",
+        },
+        AgentDefinition {
+            id: "adal",
+            display_name: "AdaL",
+            detect_command: "adal",
+        },
+        AgentDefinition {
+            id: "pi",
+            display_name: "Pi",
+            detect_command: "pi",
+        },
+        AgentDefinition {
+            id: "iflow-cli",
+            display_name: "iFlow CLI",
+            detect_command: "iflow",
+        },
+        AgentDefinition {
+            id: "command-code",
+            display_name: "Command Code",
+            detect_command: "command-code",
+        },
     ]
 }
 
@@ -210,14 +330,42 @@ pub fn skills_dir_for(agent_id: &str) -> Result<PathBuf> {
         "junie" => home.join(".junie").join("skills"),
         "qoder" => home.join(".qoder").join("skills"),
         "trae-cn" => home.join(".trae-cn").join("skills"),
-        "windsurf" => home.join(".windsurf").join("skills"),
+        "windsurf" => home.join(".codeium").join("windsurf").join("skills"),
         "augment" => home.join(".augment").join("skills"),
         "kilocode" => home.join(".kilocode").join("skills"),
         "ob1" => home.join(".ob1").join("skills"),
-        "amp" => home.join(".amp").join("skills"),
+        "amp" => home.join(".agents").join("skills"),
         "hermes" => home.join(".hermes").join("skills"),
         "factory-droid" => home.join(".factory").join("skills"),
         "qwen" => home.join(".qwen").join("skills"),
+        "cline" => home.join(".cline").join("skills"),
+        "roo" => home.join(".roo").join("skills"),
+        "goose" => home.join(".goose").join("skills"),
+        "continue" => home.join(".continue").join("skills"),
+        "warp" => home.join(".warp").join("skills"),
+        "openhands" => home.join(".openhands").join("skills"),
+        "firebender" => home.join(".firebender").join("skills"),
+        "zencoder" => home.join(".zencoder").join("skills"),
+        "cortex" => home.join(".snowflake").join("cortex").join("skills"),
+        "deepagents" => home.join(".deepagents").join("agent").join("skills"),
+        "crush" => {
+            let config =
+                dirs::config_dir().ok_or_else(|| anyhow!("cannot resolve config directory"))?;
+            config.join("crush").join("skills")
+        }
+        "kimi-cli" => home.join(".kimi").join("skills"),
+        "mux" => home.join(".mux").join("skills"),
+        "neovate" => home.join(".neovate").join("skills"),
+        "mistral-vibe" => home.join(".vibe").join("skills"),
+        "pochi" => home.join(".pochi").join("skills"),
+        "openclaude-ide" => home.join(".openclaude").join("skills"),
+        "kode" => home.join(".kode").join("skills"),
+        "mcpjam" => home.join(".mcpjam").join("skills"),
+        "bob" => home.join(".bob").join("skills"),
+        "adal" => home.join(".adal").join("skills"),
+        "pi" => home.join(".pi").join("agent").join("skills"),
+        "iflow-cli" => home.join(".iflow").join("skills"),
+        "command-code" => home.join(".commandcode").join("skills"),
         _ => return Err(anyhow!("unsupported agent id: {agent_id}")),
     };
     Ok(path)
@@ -240,14 +388,42 @@ pub fn config_dir_for(agent_id: &str) -> Result<PathBuf> {
         "junie" => home.join(".junie"),
         "qoder" => home.join(".qoder"),
         "trae-cn" => home.join(".trae-cn"),
-        "windsurf" => home.join(".windsurf"),
+        "windsurf" => home.join(".codeium").join("windsurf"),
         "augment" => home.join(".augment"),
         "kilocode" => home.join(".kilocode"),
         "ob1" => home.join(".ob1"),
-        "amp" => home.join(".amp"),
+        "amp" => home.join(".agents"),
         "hermes" => home.join(".hermes"),
         "factory-droid" => home.join(".factory"),
         "qwen" => home.join(".qwen"),
+        "cline" => home.join(".cline"),
+        "roo" => home.join(".roo"),
+        "goose" => home.join(".goose"),
+        "continue" => home.join(".continue"),
+        "warp" => home.join(".warp"),
+        "openhands" => home.join(".openhands"),
+        "firebender" => home.join(".firebender"),
+        "zencoder" => home.join(".zencoder"),
+        "cortex" => home.join(".snowflake").join("cortex"),
+        "deepagents" => home.join(".deepagents").join("agent"),
+        "crush" => {
+            let config =
+                dirs::config_dir().ok_or_else(|| anyhow!("cannot resolve config directory"))?;
+            config.join("crush")
+        }
+        "kimi-cli" => home.join(".kimi"),
+        "mux" => home.join(".mux"),
+        "neovate" => home.join(".neovate"),
+        "mistral-vibe" => home.join(".vibe"),
+        "pochi" => home.join(".pochi"),
+        "openclaude-ide" => home.join(".openclaude"),
+        "kode" => home.join(".kode"),
+        "mcpjam" => home.join(".mcpjam"),
+        "bob" => home.join(".bob"),
+        "adal" => home.join(".adal"),
+        "pi" => home.join(".pi").join("agent"),
+        "iflow-cli" => home.join(".iflow"),
+        "command-code" => home.join(".commandcode"),
         _ => return Err(anyhow!("unsupported agent id: {agent_id}")),
     };
     Ok(path)

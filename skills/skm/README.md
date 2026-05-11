@@ -49,10 +49,14 @@ AI Agent 会自动调用对应的 `skm` 命令完成操作。
 | 查看可更新技能 | `skm list --outdated` |
 | 更新技能 | `skm update [--all]` |
 | 批量重新链接 | `skm relink` |
+| 导出技能集（分享/备份） | `skm export` |
+| 从 bundle 批量安装 | `skm import` |
 | 检测本机 Agent | `skm scan` |
 | 管理 Agent 列表 | `skm agent list / add` |
 | 备份与恢复 | `skm backup list / restore / delete` |
 | 诊断环境健康 | `skm doctor` |
+| 修复悬空/缺失链接 | `skm doctor sync` |
+| 修复 SKILL.md 格式 | `skm doctor fix-skills` |
 | 注册表源管理 | `skm source list / add / remove` |
 
 ## 前置条件

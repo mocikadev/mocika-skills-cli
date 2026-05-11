@@ -4,7 +4,7 @@ displayName: skm — AI Agent 技能包管理器
 description: Local skill package manager for AI Agents. Use when installing,
   uninstalling, searching, linking, or updating AI Agent skills via skm CLI,
   or when running skm scan / relink / doctor commands.
-version: 0.3.0
+version: 0.4.0
 author: mocikadev
 tags: [skm, skill-manager, install, link, update, scan, agent, tooling]
 compatible_agents: [opencode, claude-code, codex, gemini, cursor]
@@ -204,6 +204,25 @@ skm relink cursor --dry-run       # 预览，不实际执行
 skm relink cursor --force         # 覆盖冲突路径
 ```
 
+#### `skm export [--output <FILE>]`
+
+将所有已安装技能（Git / GitHub / 注册表来源）导出为可分享的 `skills.bundle` 文件。本地路径来源自动跳过。
+
+```bash
+skm export                                   # → ./skills.bundle
+skm export --output ~/dotfiles/skills.bundle
+```
+
+#### `skm import <FILE> [--link-to <AGENT|all>] [--force]`
+
+从 `.bundle` 文件批量安装技能。已安装的技能默认跳过（幂等），`--force` 强制覆盖。
+
+```bash
+skm import skills.bundle
+skm import skills.bundle --link-to opencode
+skm import skills.bundle --force   # 强制重装所有条目
+```
+
 ### 注册表管理
 
 ```bash
@@ -225,13 +244,14 @@ skm source remove my-org                                  # 移除注册表源
 ```bash
 skm scan                          # 自动检测并注册本机 AI Agent
 skm scan --dry-run                # 预览检测结果，不写入配置
+skm scan --import skills.bundle   # 检测 Agent 并同时从 bundle 导入技能
 skm agent list                    # 列出所有已注册 Agent 及其技能数量
 skm agent add my-agent ~/.my-agent/skills  # 手动注册自定义 Agent
 ```
 
 配置文件：`~/.agents/agents.toml`
 
-内置支持的 Agent：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`
+内置支持的 Agent：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`、`cline`、`roo`、`goose`、`continue`、`warp`、`openhands`、`firebender`、`zencoder`、`cortex`、`deepagents`、`crush`、`kimi-cli`、`mux`、`neovate`、`mistral-vibe`、`pochi`、`openclaude-ide`、`kode`、`mcpjam`、`bob`、`adal`、`pi`、`iflow-cli`、`command-code`
 
 ### 备份管理
 
@@ -253,11 +273,32 @@ skm backup delete mobile-android-design 1776758731056    # 删除指定快照
 - **ENV**：共享目录、锁文件、agents.toml 是否存在
 - **AGENTS**：已注册 Agent 是否实际安装（可执行文件 / 配置目录存在）
 - **LINKS**：已安装技能在各 Agent 下的软链接是否完整
+- **INTEGRITY**：对比安装时记录的 hash，检测本地是否被意外修改
 
 发现问题时以非零退出码（1）退出，适合在 CI 或初次配置时验证环境。
 
 ```bash
 skm doctor
+```
+
+#### `skm doctor fix-skills [--dry-run]`
+
+扫描中央仓库所有 skill 的 `SKILL.md`，自动修复 frontmatter 格式问题（缺少分隔符、name 与目录名不一致等）。`--dry-run` 仅报告，不写文件。
+
+```bash
+skm doctor fix-skills
+skm doctor fix-skills --dry-run
+```
+
+#### `skm doctor sync [--agent <ID>] [--dry-run] [--force]`
+
+扫描 Agent 的 skills 目录，清理悬空软链接（broken），并为中央仓库中未链接的 skill 补建软链接（orphan）。
+
+```bash
+skm doctor sync                          # 修复所有 Agent 的链接
+skm doctor sync --dry-run                # 预览，不实际执行
+skm doctor sync --agent opencode         # 只处理 opencode
+skm doctor sync --force                  # 冲突路径也覆盖
 ```
 
 ### 自升级
@@ -286,4 +327,8 @@ skm update --check skm    # 仅检查，不执行
 | 检查是否有可用更新 | `skm update --check` |
 | 升级技能（自动备份） | `skm update <name>` 或 `skm update --all` |
 | 升级出问题，回滚 | `skm backup list [name]` 后 `skm backup restore <name>` |
+| 导出技能集（分享/备份） | `skm export --output ~/dotfiles/skills.bundle` |
+| 在新机器还原技能集 | `skm import ~/dotfiles/skills.bundle` |
+| 修复悬空/缺失软链接 | `skm doctor sync` |
+| 修复 SKILL.md frontmatter | `skm doctor fix-skills` |
 | 诊断环境 / 链接问题 | `skm doctor` |

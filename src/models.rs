@@ -86,3 +86,20 @@ pub struct OperationResult {
     pub success: bool,
     pub message: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SkillFixResult {
+    pub skill_id: String,
+    pub fixed: Vec<String>,
+    pub warnings: Vec<String>,
+    pub applied: bool,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SyncResult {
+    pub fixed: usize,
+    pub linked: usize,
+    pub conflicts: usize,
+    pub ok: usize,
+    pub errors: Vec<String>,
+}

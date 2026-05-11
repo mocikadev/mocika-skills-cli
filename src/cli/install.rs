@@ -131,7 +131,7 @@ fn resolve_install_source(input: &str) -> Result<(String, Option<String>)> {
     Err(anyhow!("skill not found in configured sources: {query}"))
 }
 
-fn resolve_target_agents(link_to: Option<&str>) -> Result<Vec<String>> {
+pub(crate) fn resolve_target_agents(link_to: Option<&str>) -> Result<Vec<String>> {
     let target = link_to.unwrap_or("all");
     if target.eq_ignore_ascii_case("all") {
         let mut ids = config::load_agents()?
@@ -162,7 +162,7 @@ fn is_local_path(s: &str) -> bool {
         || s.starts_with("file://")
 }
 
-fn parse_direct_repo_target(input: &str) -> Option<(String, Option<String>)> {
+pub(crate) fn parse_direct_repo_target(input: &str) -> Option<(String, Option<String>)> {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return None;

@@ -2,6 +2,8 @@ pub mod agent_cmd;
 pub mod backup;
 pub mod config_cmd;
 pub mod doctor;
+pub mod export;
+pub mod import;
 pub mod install;
 pub mod list;
 pub mod relink;
@@ -74,4 +76,8 @@ pub enum Commands {
     SelfUpdate(self_update::SelfUpdateArgs),
     /// Check environment and diagnose common issues
     Doctor(doctor::DoctorArgs),
+    /// Export installed skills to a shareable bundle file
+    Export(export::ExportArgs),
+    /// Install skills from a bundle file
+    Import(import::ImportArgs),
 }

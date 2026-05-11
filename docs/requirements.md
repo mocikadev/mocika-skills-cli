@@ -318,12 +318,128 @@ skm update android-cli
 
 ## 十、Phase 2 扩展
 
-- `skm create` — 技能打包 & 发布向导
-- `skm export / import` — ZIP 归档导出/导入（参考 skilly）
+### 10.1 export / import（技能集分享）
+
+| 功能 | 命令 | 说明 |
+|------|------|------|
+| 导出 | `skm export [--output <file>]` | 将所有已安装技能（Git/GitHub/注册表来源）导出为 `skills.bundle` 文件 |
+| 导入 | `skm import <file> [--link-to <agent\|all>] [--force]` | 从 bundle 文件批量安装技能 |
+
+**设计决策**：
+
+- **文件格式**：TOML（`.bundle` 扩展名），人类可读可手写
+- **默认文件名**：`skills.bundle`（当前目录）
+- **导出范围**：仅 Git / GitHub / 注册表来源；本地路径来源自动跳过（不报错）
+- **导入幂等性**：已安装的技能默认跳过，`--force` 强制覆盖
+- **导入默认链接**：`--link-to all`（与 `skm install` 一致）
+
+**bundle 文件格式**：
+
+```toml
+[meta]
+exported_by = "skm/0.3.2"
+exported_at = "2026-05-11"
+
+[[skills]]
+name = "mobile-android-design"
+source = "wshobson/agents:mobile-android-design"
+
+[[skills]]
+name = "rust-skills"
+source = "someuser/rust-skills"
+```
+
+**典型场景**：
+
+```bash
+# 导出当前环境
+skm export --output ~/dotfiles/skills.bundle
+
+# 在新机器上一键还原
+skm import ~/dotfiles/skills.bundle
+```
+
+### 10.2 doctor sync（链接一致性修复）
+
+| 功能 | 命令 | 说明 |
+|------|------|------|
+| 链接诊断修复 | `skm doctor sync [--agent <id>] [--dry-run]` | 检查所有 agent 目录，找出 broken/orphan 软链接并自动修复 |
+
+**检测的问题类型**：
+
+| 状态 | 描述 | 自动处理 |
+|------|------|------|
+| `broken` | 软链接目标不存在（中央仓库已删）| 删除悬空软链接 |
+| `orphan` | 中央仓库有 skill 但 agent 无链接 | 补建软链接 |
+| `conflict` | 目标路径存在但非 skm 创建的软链接 | 报告，不自动处理（需 `--force`）|
+
+`--dry-run`：预览所有操作，不实际执行。
+
+**典型场景**：手动删除了中央仓库某个 skill 后，各 agent 目录还残留悬空软链接；或者锁文件和磁盘状态不一致时。
+
+---
+
+### 10.3 doctor fix-skills（SKILL.md 内容修复）
+
+| 功能 | 命令 | 说明 |
+|------|------|------|
+| frontmatter 修复 | `skm doctor fix-skills [--dry-run]` | 扫描中央仓库所有 skill，自动修复 SKILL.md frontmatter 格式问题 |
+
+**可修复的问题**：
+
+- 缺少 `---` 分隔符
+- frontmatter 不是合法 YAML
+- 缺少必需字段（`name`、`description`）
+- `name` 字段与目录名不一致
+
+`--dry-run`：仅报告问题，不写文件。
+
+---
+
+### 10.4 scan --import（扫描后批量导入 bundle）
+
+| 功能 | 命令 | 说明 |
+|------|------|------|
+| 扫描并导入 | `skm scan --import <FILE> [--agent <id>] [--dry-run]` | 先执行 agent 扫描，写入 `agents.toml`，再从指定 bundle 文件批量安装技能并链接 |
+
+**与普通 `skm scan` 的区别**：
+
+- `skm scan`（基础）：仅检测本机已安装的 Agent，写入 `agents.toml`
+- `skm scan --import <FILE>`（扩展）：完成扫描后，额外执行 `skm import <FILE>`，自动把 bundle 中的技能安装并链接到所有 Agent
+
+**典型场景**：在全新机器上快速重建环境——先扫描检测 Agent，再从备份 bundle 一次性恢复全部技能。
+
+**行为说明**：
+- `--dry-run` 时仅执行扫描，跳过 import 步骤，不写入任何文件
+- import 阶段遵循幂等规则：已安装的技能跳过，除非指定 `--force`
+- `<FILE>` 为 `skm export` 生成的 TOML bundle 文件（`[[skills]]` 格式）
+
+> **注意**：此功能与"从 agent 目录回收已有 skill 纳入 skm 管理"是两件不同的事，后者规划为 `doctor adopt`（见 10.6）。
+
+---
+
+### 10.5 lock 文件增强（hash 校验字段）
+
+当前 lock 文件缺少内容校验字段，补充以下字段以支持更可靠的更新检测和完整性校验：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `computedHash` | `String` | 安装时对 skill 目录内容计算的 SHA256（用于本地内容完整性校验） |
+| `remoteTreeSha` | `String` | 安装时记录的远程 Git tree SHA（用于加速更新检测，避免全量 clone） |
+
+**影响的命令**：
+- `skm install`：安装后写入两个字段
+- `skm update --check`：优先用 `remoteTreeSha` 做远程对比（比 `rev-parse` 更快）
+- `skm doctor`：可用 `computedHash` 检测本地内容是否被意外修改
+
+---
+
+### 10.6 其他规划功能
+
+- **`doctor adopt [agent]`**（规划中）：扫描指定（或所有）agent 目录，将目录中已有的 skill 复制到中央仓库并替换为软链接，实现"零重装接管"。适用场景：用户此前手动把 skill 放进 `~/.claude/skills/`，现在想让 skm 统一管理。命令形式：`skm doctor adopt [--agent <id>] [--dry-run]`
+- **`skm create`** — 技能打包 & 发布向导
 - 技能依赖关系解析
-- 版本锁文件（`skm.lock`）
 - TUI 交互界面
-- Windows 支持（directory junction 方案）
 
 ---
 

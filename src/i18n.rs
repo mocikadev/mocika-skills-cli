@@ -125,6 +125,7 @@ pub fn t(key: &str) -> &'static str {
             "arg.search.keyword" => "Keyword to search for",
             "arg.search.limit" => "Maximum number of results to show",
             "arg.scan.dry-run" => "Preview detected agents without writing to agents.toml",
+            "arg.scan.import" => "Also import skills from a bundle file after scanning",
             "arg.relink.agent" => "Target agent ID (omit to relink all agents)",
             "arg.relink.skill" => "Only relink this specific skill",
             "arg.relink.force" => "Overwrite conflicting paths (non-skm symlinks or files)",
@@ -155,6 +156,9 @@ pub fn t(key: &str) -> &'static str {
             "doctor.no_agents" => "no agents registered — run `skm scan` to detect",
             "doctor.all_ok" => "all checks passed",
             "doctor.issues" => "issue(s)",
+            "doctor.integrity" => "Integrity",
+            "doctor.intact" => "intact",
+            "doctor.modified" => "locally modified",
             "arg.info.name" => "Skill name",
             "arg.uninstall.name" => "Skill name",
             "arg.link.name" => "Skill name",
@@ -176,6 +180,36 @@ pub fn t(key: &str) -> &'static str {
             "arg.config.lang.lang" => "Language code (en or zh)",
             "arg.config.lang.reset" => "Reset language to auto-detect from environment",
             "arg.list.outdated" => "Only show skills with available updates",
+            "cmd.doctor.fix-skills" => {
+                "Scan and fix SKILL.md frontmatter issues in installed skills"
+            }
+            "arg.doctor.fix-skills.dry-run" => "Preview changes without applying them",
+            "doctor.fix_skills" => "Fix Skills",
+            "doctor.fix_skills.dry_run" => "(dry run)",
+            "doctor.fix_skills.ok" => "ok",
+            "doctor.fix_skills.warn" => "warning",
+            "doctor.fix_skills.fixed" => "fixed",
+            "doctor.fix_skills.no_skills" => "no installed skills",
+            "cmd.export" => "Export installed skills to a shareable bundle file",
+            "cmd.import" => "Install skills from a bundle file",
+            "arg.export.output" => "Output file path (default: skills.bundle)",
+            "arg.import.file" => "Bundle file to import",
+            "arg.import.link-to" => r#"Link skills to agent(s): agent ID or "all""#,
+            "arg.import.force" => "Overwrite already-installed skills",
+            "export.exported" => "exported",
+            "export.skills_exported" => "skill(s) exported",
+            "export.local_skipped" => "local skill(s) skipped (not shareable)",
+            "import.empty_bundle" => "bundle file contains no skills",
+            "import.skipped" => "already installed, skipped",
+            "import.installing" => "installing",
+            "import.failed_parse" => "invalid source format, skipped",
+            "cmd.doctor.sync" => "Sync agent symlinks",
+            "arg.doctor.sync.agent" => "Only process this agent (default: all registered agents)",
+            "arg.doctor.sync.dry-run" => "Preview changes without making them",
+            "arg.doctor.sync.force" => "Overwrite conflicting regular files/directories",
+            "doctor.sync" => "Sync Links",
+            "doctor.sync.dry_run" => "(dry run)",
+            "doctor.sync.conflict_hint" => "use --force to overwrite conflicting paths",
             _ => "unknown translation key",
         },
         Lang::Zh => match key {
@@ -268,6 +302,7 @@ pub fn t(key: &str) -> &'static str {
             "arg.search.keyword" => "搜索关键词",
             "arg.search.limit" => "最多显示结果数",
             "arg.scan.dry-run" => "预览检测结果，不写入 agents.toml",
+            "arg.scan.import" => "扫描后同时从 bundle 文件导入技能",
             "arg.relink.agent" => "目标 Agent ID（省略则重链接所有 Agent）",
             "arg.relink.skill" => "仅重链接此技能",
             "arg.relink.force" => "覆盖冲突路径（非 skm 软链接或文件）",
@@ -296,6 +331,9 @@ pub fn t(key: &str) -> &'static str {
             "doctor.no_agents" => "未注册 Agent — 运行 `skm scan` 检测",
             "doctor.all_ok" => "所有检查通过",
             "doctor.issues" => "个问题",
+            "doctor.integrity" => "完整性",
+            "doctor.intact" => "完好",
+            "doctor.modified" => "本地已修改",
             "arg.info.name" => "技能名",
             "arg.uninstall.name" => "技能名",
             "arg.link.name" => "技能名",
@@ -315,6 +353,34 @@ pub fn t(key: &str) -> &'static str {
             "arg.config.lang.lang" => "语言代码（en 或 zh）",
             "arg.config.lang.reset" => "重置语言为自动检测",
             "arg.list.outdated" => "只显示有可用更新的技能",
+            "cmd.doctor.fix-skills" => "扫描并修复已安装技能的 SKILL.md 元数据问题",
+            "arg.doctor.fix-skills.dry-run" => "预览修改内容，不实际写入",
+            "doctor.fix_skills" => "修复技能",
+            "doctor.fix_skills.dry_run" => "（预览）",
+            "doctor.fix_skills.ok" => "正常",
+            "doctor.fix_skills.warn" => "警告",
+            "doctor.fix_skills.fixed" => "已修复",
+            "doctor.fix_skills.no_skills" => "暂无已安装技能",
+            "cmd.export" => "将已安装技能导出为可分享的 bundle 文件",
+            "cmd.import" => "从 bundle 文件批量安装技能",
+            "arg.export.output" => "输出文件路径（默认：skills.bundle）",
+            "arg.import.file" => "要导入的 bundle 文件",
+            "arg.import.link-to" => "安装后链接到 Agent：Agent ID 或 \"all\"",
+            "arg.import.force" => "覆盖已安装的技能",
+            "export.exported" => "已导出",
+            "export.skills_exported" => "个技能已导出",
+            "export.local_skipped" => "个本地技能已跳过（不可分享）",
+            "import.empty_bundle" => "bundle 文件中没有技能",
+            "import.skipped" => "已安装，已跳过",
+            "import.installing" => "正在安装",
+            "import.failed_parse" => "无效 source 格式，已跳过",
+            "cmd.doctor.sync" => "同步 Agent 软链接",
+            "arg.doctor.sync.agent" => "只处理指定 Agent（默认处理所有已注册 Agent）",
+            "arg.doctor.sync.dry-run" => "预览操作，不实际执行",
+            "arg.doctor.sync.force" => "强制覆盖冲突的普通文件或目录",
+            "doctor.sync" => "同步链接",
+            "doctor.sync.dry_run" => "（预览）",
+            "doctor.sync.conflict_hint" => "使用 --force 可覆盖冲突路径",
             _ => "未知翻译键",
         },
     }
@@ -468,5 +534,26 @@ pub fn fmt_update_available(tag: &str) -> String {
     match *current() {
         Lang::En => format!("{tag} is available — run `skm self-update` to install"),
         Lang::Zh => format!("{tag} 可用 — 运行 `skm self-update` 安装"),
+    }
+}
+
+pub fn fmt_fix_skills_summary(checked: usize, fixed: usize, warned: usize) -> String {
+    match *current() {
+        Lang::En => format!("{checked} checked, {fixed} fixed, {warned} warning(s)"),
+        Lang::Zh => format!("已检查 {checked}，修复 {fixed}，警告 {warned}"),
+    }
+}
+
+pub fn fmt_import_summary(installed: usize, skipped: usize, failed: usize) -> String {
+    match *current() {
+        Lang::En => format!("{installed} installed, {skipped} skipped, {failed} failed"),
+        Lang::Zh => format!("已安装 {installed}，跳过 {skipped}，失败 {failed}"),
+    }
+}
+
+pub fn fmt_sync_summary(fixed: usize, linked: usize, conflicts: usize, ok: usize) -> String {
+    match *current() {
+        Lang::En => format!("{fixed} fixed, {linked} linked, {conflicts} conflict(s), {ok} ok"),
+        Lang::Zh => format!("修复 {fixed}，已链接 {linked}，冲突 {conflicts}，正常 {ok}"),
     }
 }

@@ -12,7 +12,7 @@ use sha2::{Digest, Sha256};
 use super::{agent, config, git, lock, skill};
 use crate::i18n;
 use crate::models::{
-    LinkState, OperationResult, RelinkResult, SkillBackup, SkillSummary, UpdateCheck,
+    LinkState, OperationResult, RelinkResult, SkillBackup, SkillSummary, SyncResult, UpdateCheck,
 };
 
 const SKILL_FILE_NAME: &str = "SKILL.md";
@@ -138,6 +138,7 @@ where
             "sourceUrl": repo_url,
             "skillPath": relative_skill_path,
             "skillFolderHash": hash,
+            "remoteTreeSha": commit_hash,
             "installedAt": now,
             "updatedAt": lock::now_rfc3339(),
             "skillyCommitHash": commit_hash
@@ -529,7 +530,11 @@ pub fn update_skill(skill_id: &str) -> Result<SkillSummary> {
         updated["skillFolderHash"] = serde_json::Value::String(new_hash);
         updated["updatedAt"] = serde_json::Value::String(now);
         updated["skillyCommitHash"] = match new_commit_hash {
-            Some(value) => serde_json::Value::String(value),
+            Some(ref value) => serde_json::Value::String(value.clone()),
+            None => serde_json::Value::Null,
+        };
+        updated["remoteTreeSha"] = match new_commit_hash {
+            Some(ref value) => serde_json::Value::String(value.clone()),
             None => serde_json::Value::Null,
         };
 
@@ -715,6 +720,102 @@ pub fn delete_skill_backup(skill_id: &str, snapshot_id: String) -> Result<Operat
     })
 }
 
+pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> Result<SyncResult> {
+    let targets = resolve_relink_targets(agent_id)?;
+    let shared_dir = agent::shared_skills_dir()?;
+    let mut result = SyncResult::default();
+
+    for (_aid, skills_dir) in &targets {
+        let mut will_relink: HashSet<String> = HashSet::new();
+
+        if skills_dir.exists() {
+            for entry in fs::read_dir(skills_dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                let name = entry.file_name().to_string_lossy().to_string();
+                let meta = match fs::symlink_metadata(&path) {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
+
+                if meta.file_type().is_symlink() {
+                    if fs::metadata(&path).is_err() {
+                        let removed = if dry_run {
+                            true
+                        } else {
+                            match fs::remove_file(&path) {
+                                Ok(()) => true,
+                                Err(e) => {
+                                    result.errors.push(format!(
+                                        "remove broken link {}: {e}",
+                                        path.display()
+                                    ));
+                                    false
+                                }
+                            }
+                        };
+                        if removed {
+                            will_relink.insert(name);
+                            result.fixed += 1;
+                        }
+                    } else {
+                        result.ok += 1;
+                    }
+                } else if force {
+                    let source = shared_dir.join(&name);
+                    if source.exists() {
+                        let removed = if dry_run {
+                            true
+                        } else {
+                            match remove_path(&path) {
+                                Ok(()) => true,
+                                Err(e) => {
+                                    result
+                                        .errors
+                                        .push(format!("force-remove {}: {e}", path.display()));
+                                    false
+                                }
+                            }
+                        };
+                        if removed {
+                            will_relink.insert(name);
+                        }
+                    } else {
+                        result.conflicts += 1;
+                    }
+                } else {
+                    result.conflicts += 1;
+                }
+            }
+        }
+
+        let skill_ids = list_shared_skill_ids()?;
+        for skill_id in &skill_ids {
+            let dest = skills_dir.join(skill_id);
+            let needs_link = will_relink.contains(skill_id) || fs::symlink_metadata(&dest).is_err();
+            if !needs_link {
+                continue;
+            }
+            if dry_run {
+                result.linked += 1;
+                continue;
+            }
+            if let Err(e) = fs::create_dir_all(skills_dir) {
+                result
+                    .errors
+                    .push(format!("mkdir {}: {e}", skills_dir.display()));
+                continue;
+            }
+            match create_link(&shared_dir.join(skill_id), &dest) {
+                Ok(()) => result.linked += 1,
+                Err(e) => result.errors.push(format!("link {skill_id}: {e}")),
+            }
+        }
+    }
+
+    Ok(result)
+}
+
 pub fn relink_all(force: bool, backup: bool, dry_run: bool) -> Result<RelinkResult> {
     relink_selected(None, None, force, backup, dry_run)
 }
@@ -813,6 +914,22 @@ pub fn relink_selected(
     }
 
     Ok(result)
+}
+
+pub fn skill_hash_check(skill_id: &str) -> Result<Option<(String, String)>> {
+    let Some(entry) = lock::get_skill_entry(skill_id)? else {
+        return Ok(None);
+    };
+    let Some(stored) = entry
+        .get("skillFolderHash")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+    else {
+        return Ok(None);
+    };
+    let path = shared_skill_path(skill_id)?;
+    let current = compute_directory_hash(&path)?;
+    Ok(Some((stored, current)))
 }
 
 fn shared_skill_path(skill_id: &str) -> Result<PathBuf> {
@@ -1467,4 +1584,41 @@ fn current_epoch_millis() -> u128 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_millis())
         .unwrap_or(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn hash_is_stable_for_same_content() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("SKILL.md"), b"name: test\n").unwrap();
+        let h1 = compute_directory_hash(dir.path()).unwrap();
+        let h2 = compute_directory_hash(dir.path()).unwrap();
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn hash_changes_when_content_changes() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("SKILL.md"), b"name: test\n").unwrap();
+        let h1 = compute_directory_hash(dir.path()).unwrap();
+
+        fs::write(dir.path().join("SKILL.md"), b"name: test\nchanged: true\n").unwrap();
+        let h2 = compute_directory_hash(dir.path()).unwrap();
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn hash_changes_when_file_added() {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("SKILL.md"), b"name: test\n").unwrap();
+        let h1 = compute_directory_hash(dir.path()).unwrap();
+
+        fs::write(dir.path().join("extra.md"), b"extra content\n").unwrap();
+        let h2 = compute_directory_hash(dir.path()).unwrap();
+        assert_ne!(h1, h2);
+    }
 }

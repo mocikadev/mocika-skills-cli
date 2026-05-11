@@ -9,7 +9,10 @@ A local skill package manager CLI for AI Agents. Manage installation, deployment
 ## Features
 
 - **Unified install**: One command to install skills from [skills.sh](https://skills.sh), with direct Git repo installs also supported
+- **Multi-source search**: Register any GitHub / GitLab / private Git repo or **local directory** as a skill source via `skm source add`; search across all sources with `skm search`
+- **Local source support**: Register a local filesystem directory as a source, or install directly from a local path — no git required
 - **Multi-agent deployment**: Symlink mechanism lets a single skill file serve multiple Agents at once
+- **Export & import**: `skm export` bundles installed skills into a shareable file; `skm import` batch-installs from a bundle for quick environment restore
 - **Auto-detection**: `skm scan` detects AI Agents installed on your machine, no manual config needed
 - **Shared lock file**: Shares `~/.agents/.skill-lock.json` with the skilly GUI, keeping data in sync
 - **Safe updates**: Automatic backup before every update, with snapshot-level rollback support
@@ -65,17 +68,25 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 |---------|-------------|
 | `skm install <name> [--link-to <agent\|all>]` | Install a skill (supports registry name, `owner/repo`, or full Git URL) |
 | `skm uninstall <name>` | Uninstall a skill |
-| `skm search <keyword>` | Search the registry |
+| `skm search <keyword>` | Search across all registered sources |
 | `skm list` | List installed skills |
+| `skm list --outdated` | Show only skills with available updates |
 | `skm info <name>` | Show skill details |
-| `skm update [name]` | Update a skill |
+| `skm update [name]` | Update a skill (omit name or add `--all` to update everything) |
 | `skm link <name> <agent>` | Link a skill to an Agent |
 | `skm unlink <name> <agent>` | Remove a link |
 | `skm relink [agent]` | Re-link all skills in bulk |
-| `skm scan` | Detect Agents on the local machine |
+| `skm export [--output <file>]` | Export installed skills as a shareable `skills.bundle` |
+| `skm import <file> [--link-to <agent\|all>] [--force]` | Batch-install skills from a bundle file |
+| `skm scan [--import <file>]` | Detect Agents on the local machine (optionally import a bundle after scan) |
 | `skm agent list` | List registered Agents |
 | `skm backup list/restore/delete <name>` | Manage backups |
-| `skm source list/add/remove` | Manage registry sources |
+| `skm doctor` | Check environment health and diagnose link/Agent issues |
+| `skm doctor fix-skills [--dry-run]` | Detect and auto-fix SKILL.md frontmatter issues |
+| `skm doctor sync [--agent <id>] [--dry-run]` | Rebuild symlinks, repair broken or missing links |
+| `skm source list/add/remove` | Manage registry sources (skills.sh / GitHub / Git / local dir) |
+| `skm config lang [zh\|en\|--reset]` | View or switch help language |
+| `skm self-update [--check]` | Upgrade skm itself to the latest version |
 
 Full documentation: [docs/commands.md](commands.md)
 
@@ -92,7 +103,7 @@ Full documentation: [docs/commands.md](commands.md)
 
 ## Supported Agents
 
-`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity`
+`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen` · `cline` · `roo` · `goose` · `continue` · `warp` · `openhands` · `firebender` · `zencoder` · `cortex` · `deepagents` · `crush` · `kimi-cli` · `mux` · `neovate` · `mistral-vibe` · `pochi` · `openclaude-ide` · `kode` · `mcpjam` · `bob` · `adal` · `pi` · `iflow-cli` · `command-code`
 
 Agents not listed above can be registered manually with `skm agent add`.
 
@@ -104,7 +115,7 @@ Agents not listed above can be registered manually with `skm agent add`.
 | Linux | aarch64 (musl) | ✅ |
 | macOS | x86_64 | ✅ |
 | macOS | Apple Silicon | ✅ |
-| Windows | — | Planned |
+| Windows | x86_64 | ✅ |
 
 ## Build from Source
 
@@ -115,7 +126,7 @@ cargo build --release
 # Output: ./target/release/skm
 ```
 
-Requires Rust 1.80+.
+Requires Rust 1.88+.
 
 ## License
 

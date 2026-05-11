@@ -86,11 +86,17 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 | `skm link <name> <agent>` | 链接到 Agent |
 | `skm unlink <name> <agent>` | 移除链接 |
 | `skm relink [agent]` | 批量重新链接 |
+| `skm export [--output <file>]` | 导出已安装技能为可分享的 `skills.bundle` |
+| `skm import <file> [--link-to <agent\|all>] [--force]` | 从 bundle 文件批量安装 |
 | `skm scan` | 检测本机 Agent |
 | `skm agent list` | 列出已注册 Agent |
 | `skm backup list/restore/delete <name>` | 备份管理 |
 | `skm doctor` | 检测环境健康状态，诊断链接/Agent 问题 |
+| `skm doctor fix-skills [--dry-run]` | 检测并自动修复所有 skill 的 SKILL.md frontmatter |
+| `skm doctor sync [--agent <id>] [--dry-run]` | 重建软链接，修复悬空或缺失链接 |
 | `skm source list/add/remove` | 注册表源管理（支持 skills.sh / GitHub / Git / 本地目录） |
+| `skm config lang [zh\|en\|--reset]` | 查看或切换 help 语言 |
+| `skm self-update [--check]` | 升级 skm 本身到最新版 |
 
 完整文档：[docs/commands.md](docs/commands.md)
 
@@ -107,7 +113,7 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 
 ## 支持的 Agent
 
-`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen`
+`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen` · `cline` · `roo` · `goose` · `continue` · `warp` · `openhands` · `firebender` · `zencoder` · `cortex` · `deepagents` · `crush` · `kimi-cli` · `mux` · `neovate` · `mistral-vibe` · `pochi` · `openclaude-ide` · `kode` · `mcpjam` · `bob` · `adal` · `pi` · `iflow-cli` · `command-code`
 
 未列出的 Agent 可通过 `skm agent add` 手动注册。
 

@@ -352,7 +352,79 @@ Windows 目标（`x86_64-pc-windows-msvc`）待 Phase 2 补充。
 
 ---
 
-## 十、与 skilly 核心层复用对照
+## 十一、export / import 设计
+
+### 11.1 bundle 文件格式
+
+文件扩展名 `.bundle`，TOML 格式，默认文件名 `skills.bundle`。
+
+```toml
+[meta]
+exported_by = "skm/0.3.2"    # 导出时的 skm 版本
+exported_at = "2026-05-11"   # 导出日期（YYYY-MM-DD）
+
+[[skills]]
+name = "mobile-android-design"
+source = "wshobson/agents:mobile-android-design"  # 与 lock 文件的 source 字段一致
+
+[[skills]]
+name = "rust-skills"
+source = "someuser/rust-skills"
+```
+
+`source` 字段直接复用 lock 文件中已有的 `source` 字段，无需额外转换。
+
+### 11.2 模块设计
+
+新增文件：
+- `src/cli/export.rs` — `skm export` 命令处理层
+- `src/cli/import.rs` — `skm import` 命令处理层  
+- `src/core/bundle.rs` — bundle 文件序列化/反序列化 + 导入核心逻辑
+
+新增数据类型（`src/core/bundle.rs`）：
+
+```rust
+#[derive(Serialize, Deserialize)]
+pub struct BundleFile {
+    pub meta: BundleMeta,
+    pub skills: Vec<BundleSkill>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BundleMeta {
+    pub exported_by: String,
+    pub exported_at: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BundleSkill {
+    pub name: String,
+    pub source: String,
+}
+```
+
+### 11.3 export 核心逻辑
+
+```
+1. 读取 lock 文件，遍历所有已安装 skill
+2. 过滤 sourceType == "local" 的条目（跳过本地路径来源）
+3. 收集 {name, source} 组装 BundleFile
+4. 序列化为 TOML，写入目标文件（默认 ./skills.bundle）
+5. 末尾输出：exported N skills (M skipped: local source)
+```
+
+### 11.4 import 核心逻辑
+
+```
+1. 读取并反序列化 .bundle 文件
+2. 对每个 skill 条目：
+   a. 检查是否已安装（查 lock 文件）
+   b. 已安装且无 --force → 跳过，记录 skipped
+   c. 未安装或有 --force → 调用现有 install_skill_from_repo_with_progress()
+3. 末尾汇总：N installed, M skipped
+```
+
+install 入口复用现有 `operations::install_skill_from_repo_with_progress()`，import 只需在外层加循环和 skip 判断。
 
 | skm 模块 | 参考 skilly 文件 | 复用程度 |
 |---------|----------------|---------|
@@ -361,3 +433,140 @@ Windows 目标（`x86_64-pc-windows-msvc`）待 Phase 2 补充。
 | `core/registry.rs` | `src-tauri/src/core/registry.rs` | 直接移植，去掉 Tauri 依赖 |
 | `core/operations.rs` | `src-tauri/src/core/operations.rs` | 大量参考，重写安装/链接流程 |
 | `models.rs` | `src-tauri/src/core/models.rs` | 部分复用，去掉 GUI 相关字段 |
+
+---
+
+## 十二、doctor sync 设计
+
+### 12.1 核心逻辑
+
+```
+对每个已注册 agent：
+  遍历 agent skills 目录下所有条目：
+    - 是软链接 且 目标不存在 → broken，删除
+    - 是普通目录/文件（非软链接）→ conflict，报告，跳过
+  遍历中央仓库所有 skill：
+    - agent 目录无对应条目 → orphan，补建软链接
+输出汇总：N fixed, M conflicts (use --force to overwrite), K ok
+```
+
+### 12.2 新增命令参数
+
+```
+skm doctor sync [--agent <ID>] [--dry-run] [--force]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--agent <ID>` | 只处理指定 agent（默认处理所有已注册 agent）|
+| `--dry-run` | 预览操作，不实际执行 |
+| `--force` | conflict 状态也强制覆盖 |
+
+### 12.3 模块变动
+
+- `src/cli/doctor.rs`：新增 `sync` 子命令解析
+- `src/core/operations.rs`：新增 `sync_agent_links()` 函数
+
+---
+
+## 十三、doctor fix-skills 设计
+
+### 13.1 核心逻辑
+
+```
+遍历 ~/.agents/skills/ 下所有子目录：
+  读取 SKILL.md：
+    - 不存在 → 报告，跳过
+    - 缺 frontmatter 分隔符 → 补写 `---\n`
+    - frontmatter 非法 YAML → 报告，跳过（不自动修复，避免破坏内容）
+    - 缺 name 字段 → 用目录名补填
+    - 缺 description 字段 → 用空字符串占位，报告提示用户手动补全
+    - name 与目录名不一致 → 修正 name 字段为目录名
+输出：N fixed, M skipped (manual fix required), K ok
+```
+
+### 13.2 新增命令参数
+
+```
+skm doctor fix-skills [--dry-run]
+```
+
+### 13.3 模块变动
+
+- `src/cli/doctor.rs`：新增 `fix-skills` 子命令
+- `src/core/skill.rs`：新增 `fix_skill_frontmatter()` 函数
+
+---
+
+## 十四、scan --import 设计
+
+### 14.1 核心逻辑
+
+```
+对每个目标 agent 的 skills 目录：
+  遍历所有子目录（含 SKILL.md 的即为 skill）：
+    - 已在中央仓库 → 跳过（幂等）
+    - 未在中央仓库：
+        复制目录到 ~/.agents/skills/<name>/
+        写入 lock 文件（sourceType = "imported"，无 source/url）
+        将 agent 目录中原目录替换为软链接
+输出：N imported, M skipped (already managed)
+```
+
+### 14.2 新增命令参数
+
+```
+skm scan --import [--agent <ID>] [--dry-run]
+```
+
+| 参数 | 说明 |
+|------|------|
+| `--import` | 在扫描基础上导入已有 skill |
+| `--agent <ID>` | 只处理指定 agent |
+| `--dry-run` | 预览，不实际执行 |
+
+### 14.3 模块变动
+
+- `src/cli/scan.rs`：新增 `--import` flag 及处理分支
+- `src/core/operations.rs`：新增 `import_skill_from_agent_dir()` 函数
+
+---
+
+## 十五、lock 文件 hash 字段增强
+
+### 15.1 新增字段
+
+在现有 lock 条目基础上补充两个字段：
+
+```json
+{
+  "skills": {
+    "rust-skills": {
+      "source": "someuser/rust-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/someuser/rust-skills.git",
+      "skillyCommitHash": "7f4d2b8...",
+      "computedHash": "sha256:abc123...",
+      "remoteTreeSha": "def456...",
+      "installedAt": "2026-05-11T10:00:00Z",
+      "updatedAt": "2026-05-11T10:00:00Z"
+    }
+  }
+}
+```
+
+| 字段 | 写入时机 | 用途 |
+|------|------|------|
+| `computedHash` | install / update 完成后 | 本地内容完整性校验（`doctor` 用）|
+| `remoteTreeSha` | install / update 完成后 | 加速 `update --check`（免 clone 直接对比 tree sha）|
+
+### 15.2 向后兼容
+
+字段为可选，旧 lock 文件无这两个字段时正常读取，功能降级为现有行为（完整 clone 后 rev-parse 对比）。
+
+### 15.3 模块变动
+
+- `src/core/lock.rs`：lock 条目结构体新增两个 `Option<String>` 字段
+- `src/core/operations.rs`：install 后写入 `computedHash`
+- `src/core/git.rs`：新增 `remote_tree_sha()` 函数（`git ls-remote`）
+- `src/core/update.rs`：`check_skill_update()` 优先用 `remoteTreeSha` 对比

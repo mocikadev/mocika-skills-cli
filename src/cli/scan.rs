@@ -1,6 +1,7 @@
 use anyhow::Result;
 use console::style;
 
+use crate::cli::import as import_cmd;
 use crate::core::{agent, config};
 use crate::i18n;
 
@@ -10,6 +11,9 @@ pub struct ScanArgs {
     /// Preview detected agents without writing to agents.toml
     #[arg(long)]
     pub dry_run: bool,
+    /// Also import skills from a bundle file after scanning
+    #[arg(long, value_name = "FILE")]
+    pub import: Option<String>,
 }
 
 pub fn run(args: ScanArgs) -> Result<()> {
@@ -61,6 +65,17 @@ pub fn run(args: ScanArgs) -> Result<()> {
                 style(i18n::t("scan")).yellow().bold(),
                 i18n::fmt_removed_agents(removed_ids.len(), &removed_ids.join(", "))
             );
+        }
+    }
+
+    if let Some(bundle_file) = args.import {
+        if !args.dry_run {
+            println!();
+            import_cmd::run(import_cmd::ImportArgs {
+                file: bundle_file,
+                link_to: Some("all".to_string()),
+                force: false,
+            })?;
         }
     }
 

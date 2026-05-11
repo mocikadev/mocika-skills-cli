@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod backup;
+pub mod bundle;
 pub mod config;
 pub mod git;
 pub mod lock;

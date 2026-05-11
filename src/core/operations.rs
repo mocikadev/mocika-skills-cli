@@ -296,6 +296,13 @@ pub fn assign_skill(skill_id: &str, agent_id: &str) -> Result<OperationResult> {
 
     let agent_dir = resolve_agent_skills_dir(agent_id)?;
 
+    if agent_dir == agent::shared_skills_dir()? {
+        return Ok(OperationResult {
+            success: true,
+            message: format!("skill {skill_id} already accessible to {agent_id}"),
+        });
+    }
+
     if let Ok(config_dir) = agent::config_dir_for(agent_id) {
         if !config_dir.exists() {
             bail!(

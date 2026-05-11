@@ -725,7 +725,7 @@ pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> R
     let shared_dir = agent::shared_skills_dir()?;
     let mut result = SyncResult::default();
 
-    for (_aid, skills_dir) in &targets {
+    for (aid, skills_dir) in &targets {
         let mut will_relink: HashSet<String> = HashSet::new();
 
         if skills_dir.exists() {
@@ -755,8 +755,9 @@ pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> R
                             }
                         };
                         if removed {
-                            will_relink.insert(name);
+                            will_relink.insert(name.clone());
                             result.fixed += 1;
+                            result.fixed_items.push((aid.clone(), name));
                         }
                     } else {
                         result.ok += 1;
@@ -782,9 +783,11 @@ pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> R
                         }
                     } else {
                         result.conflicts += 1;
+                        result.conflict_items.push((aid.clone(), name));
                     }
                 } else {
                     result.conflicts += 1;
+                    result.conflict_items.push((aid.clone(), name));
                 }
             }
         }
@@ -798,6 +801,7 @@ pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> R
             }
             if dry_run {
                 result.linked += 1;
+                result.linked_items.push((aid.clone(), skill_id.clone()));
                 continue;
             }
             if let Err(e) = fs::create_dir_all(skills_dir) {
@@ -807,7 +811,10 @@ pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> R
                 continue;
             }
             match create_link(&shared_dir.join(skill_id), &dest) {
-                Ok(()) => result.linked += 1,
+                Ok(()) => {
+                    result.linked += 1;
+                    result.linked_items.push((aid.clone(), skill_id.clone()));
+                }
                 Err(e) => result.errors.push(format!("link {skill_id}: {e}")),
             }
         }

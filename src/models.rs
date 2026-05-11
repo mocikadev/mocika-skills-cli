@@ -102,4 +102,7 @@ pub struct SyncResult {
     pub conflicts: usize,
     pub ok: usize,
     pub errors: Vec<String>,
+    pub fixed_items: Vec<(String, String)>,
+    pub linked_items: Vec<(String, String)>,
+    pub conflict_items: Vec<(String, String)>,
 }

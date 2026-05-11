@@ -90,6 +90,39 @@ fn run_sync(args: SyncArgs) -> Result<()> {
     let result = operations::sync_agent_links(agent_id, args.force, args.dry_run)?;
 
     println!();
+
+    for (agent, skill) in &result.fixed_items {
+        println!(
+            "  {}  {:<30}  {:<16}  {}",
+            style("✓").green(),
+            style(skill).bold(),
+            style(agent).dim(),
+            style(i18n::t("doctor.sync.item.fixed")).yellow()
+        );
+    }
+    for (agent, skill) in &result.linked_items {
+        println!(
+            "  {}  {:<30}  {:<16}  {}",
+            style("✓").green(),
+            style(skill).bold(),
+            style(agent).dim(),
+            style(i18n::t("doctor.sync.item.linked")).green()
+        );
+    }
+    for (agent, skill) in &result.conflict_items {
+        println!(
+            "  {}  {:<30}  {:<16}  {}",
+            style("!").yellow().bold(),
+            style(skill).bold(),
+            style(agent).dim(),
+            style(i18n::t("doctor.sync.item.conflict")).yellow()
+        );
+    }
+    for err in &result.errors {
+        println!("  {} {}", style("✗").red(), style(err).dim());
+    }
+
+    println!();
     println!(
         "  {} {}",
         style("→").dim(),
@@ -102,10 +135,6 @@ fn run_sync(args: SyncArgs) -> Result<()> {
             style("!").yellow().bold(),
             i18n::t("doctor.sync.conflict_hint")
         );
-    }
-
-    for err in &result.errors {
-        println!("  {} {}", style("✗").red(), style(err).dim());
     }
 
     Ok(())

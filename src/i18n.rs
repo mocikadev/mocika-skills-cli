@@ -210,6 +210,9 @@ pub fn t(key: &str) -> &'static str {
             "doctor.sync" => "Sync Links",
             "doctor.sync.dry_run" => "(dry run)",
             "doctor.sync.conflict_hint" => "use --force to overwrite conflicting paths",
+            "doctor.sync.item.fixed" => "→ fixed broken link",
+            "doctor.sync.item.linked" => "→ linked",
+            "doctor.sync.item.conflict" => "→ conflict (not a symlink, use --force to overwrite)",
             _ => "unknown translation key",
         },
         Lang::Zh => match key {
@@ -381,6 +384,9 @@ pub fn t(key: &str) -> &'static str {
             "doctor.sync" => "同步链接",
             "doctor.sync.dry_run" => "（预览）",
             "doctor.sync.conflict_hint" => "使用 --force 可覆盖冲突路径",
+            "doctor.sync.item.fixed" => "→ 已修复悬空链接",
+            "doctor.sync.item.linked" => "→ 已链接",
+            "doctor.sync.item.conflict" => "→ 冲突（非软链接，使用 --force 覆盖）",
             _ => "未知翻译键",
         },
     }

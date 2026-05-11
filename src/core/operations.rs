@@ -726,6 +726,9 @@ pub fn sync_agent_links(agent_id: Option<&str>, force: bool, dry_run: bool) -> R
     let mut result = SyncResult::default();
 
     for (aid, skills_dir) in &targets {
+        if skills_dir == &shared_dir {
+            continue;
+        }
         let mut will_relink: HashSet<String> = HashSet::new();
 
         if skills_dir.exists() {

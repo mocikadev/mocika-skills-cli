@@ -237,6 +237,11 @@ pub fn definitions() -> Vec<AgentDefinition> {
             detect_command: "pi",
         },
         AgentDefinition {
+            id: "oh-my-pi",
+            display_name: "Oh My Pi",
+            detect_command: "omp",
+        },
+        AgentDefinition {
             id: "iflow-cli",
             display_name: "iFlow CLI",
             detect_command: "iflow",
@@ -364,6 +369,7 @@ pub fn skills_dir_for(agent_id: &str) -> Result<PathBuf> {
         "bob" => home.join(".bob").join("skills"),
         "adal" => home.join(".adal").join("skills"),
         "pi" => home.join(".pi").join("agent").join("skills"),
+        "oh-my-pi" => home.join(".omp").join("agent").join("skills"),
         "iflow-cli" => home.join(".iflow").join("skills"),
         "command-code" => home.join(".commandcode").join("skills"),
         _ => return Err(anyhow!("unsupported agent id: {agent_id}")),
@@ -422,6 +428,7 @@ pub fn config_dir_for(agent_id: &str) -> Result<PathBuf> {
         "bob" => home.join(".bob"),
         "adal" => home.join(".adal"),
         "pi" => home.join(".pi").join("agent"),
+        "oh-my-pi" => home.join(".omp").join("agent"),
         "iflow-cli" => home.join(".iflow"),
         "command-code" => home.join(".commandcode"),
         _ => return Err(anyhow!("unsupported agent id: {agent_id}")),

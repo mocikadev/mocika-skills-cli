@@ -90,11 +90,26 @@ pub fn check_update() -> Result<Option<ReleaseInfo>> {
         .context("failed to build HTTP client")?;
 
     let url = format!("{GITHUB_API}/repos/{REPO}/releases/latest");
-    let release: Release = client
+    let mut req = client
         .get(&url)
-        .header("Accept", "application/vnd.github.v3+json")
+        .header("Accept", "application/vnd.github.v3+json");
+    if let Ok(token) = std::env::var("GITHUB_TOKEN") {
+        req = req.header("Authorization", format!("Bearer {token}"));
+    }
+    let resp = req
         .send()
-        .with_context(|| format!("failed to reach GitHub API: {url}"))?
+        .with_context(|| format!("failed to reach GitHub API: {url}"))?;
+    if resp.status() == reqwest::StatusCode::FORBIDDEN
+        || resp.status() == reqwest::StatusCode::TOO_MANY_REQUESTS
+    {
+        anyhow::bail!(
+            "GitHub API rate limit exceeded ({}). \
+             Set the GITHUB_TOKEN environment variable to increase your quota:\n  \
+             export GITHUB_TOKEN=<your-personal-access-token>",
+            resp.status()
+        );
+    }
+    let release: Release = resp
         .error_for_status()
         .context("GitHub API returned error status")?
         .json()

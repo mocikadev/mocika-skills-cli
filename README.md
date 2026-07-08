@@ -113,7 +113,7 @@ skm install mocikadev/mocika-skills-cli:skills/skm --link-to all
 
 ## 支持的 Agent
 
-`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen` · `cline` · `roo` · `goose` · `continue` · `warp` · `openhands` · `firebender` · `zencoder` · `cortex` · `deepagents` · `crush` · `kimi-cli` · `mux` · `neovate` · `mistral-vibe` · `pochi` · `openclaude-ide` · `kode` · `mcpjam` · `bob` · `adal` · `pi` · `oh-my-pi` · `iflow-cli` · `command-code`
+`claude-code` · `codex` · `atomcode` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen` · `cline` · `roo` · `goose` · `continue` · `warp` · `openhands` · `firebender` · `zencoder` · `cortex` · `deepagents` · `crush` · `kimi-cli` · `mux` · `neovate` · `mistral-vibe` · `pochi` · `openclaude-ide` · `kode` · `mcpjam` · `bob` · `adal` · `pi` · `oh-my-pi` · `iflow-cli` · `command-code`
 
 未列出的 Agent 可通过 `skm agent add` 手动注册。
 

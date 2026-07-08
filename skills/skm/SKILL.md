@@ -4,10 +4,10 @@ displayName: skm — AI Agent 技能包管理器
 description: Local skill package manager for AI Agents. Use when installing,
   uninstalling, searching, linking, or updating AI Agent skills via skm CLI,
   or when running skm scan / relink / doctor commands.
-version: 0.4.3
+version: 0.4.6
 author: mocikadev
 tags: [skm, skill-manager, install, link, update, scan, agent, tooling]
-compatible_agents: [opencode, claude-code, codex, gemini, cursor]
+compatible_agents: [opencode, claude-code, codex, atomcode, gemini, cursor]
 ---
 
 # skm — AI Agent 技能包管理器
@@ -251,7 +251,7 @@ skm agent add my-agent ~/.my-agent/skills  # 手动注册自定义 Agent
 
 配置文件：`~/.agents/agents.toml`
 
-内置支持的 Agent：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`、`cline`、`roo`、`goose`、`continue`、`warp`、`openhands`、`firebender`、`zencoder`、`cortex`、`deepagents`、`crush`、`kimi-cli`、`mux`、`neovate`、`mistral-vibe`、`pochi`、`openclaude-ide`、`kode`、`mcpjam`、`bob`、`adal`、`pi`、`oh-my-pi`、`iflow-cli`、`command-code`
+内置支持的 Agent：`claude-code`、`codex`、`atomcode`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`、`cline`、`roo`、`goose`、`continue`、`warp`、`openhands`、`firebender`、`zencoder`、`cortex`、`deepagents`、`crush`、`kimi-cli`、`mux`、`neovate`、`mistral-vibe`、`pochi`、`openclaude-ide`、`kode`、`mcpjam`、`bob`、`adal`、`pi`、`oh-my-pi`、`iflow-cli`、`command-code`
 
 ### 备份管理
 

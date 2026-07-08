@@ -446,7 +446,7 @@ skm scan [--dry-run] [--import <FILE>]
 3. Skills 目录存在（如 `~/.claude/skills/`）
 4. Skills 目录内有技能包
 
-**内置支持的 Agent**：`claude-code`、`codex`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`、`cline`、`roo`、`goose`、`continue`、`warp`、`openhands`、`firebender`、`zencoder`、`cortex`、`deepagents`、`crush`、`kimi-cli`、`mux`、`neovate`、`mistral-vibe`、`pochi`、`openclaude-ide`、`kode`、`mcpjam`、`bob`、`adal`、`pi`、`iflow-cli`、`command-code`
+**内置支持的 Agent**：`claude-code`、`codex`、`atomcode`、`gemini-cli`、`copilot-cli`、`opencode`、`antigravity`、`cursor`、`kiro`、`codebuddy`、`openclaw`、`trae`、`junie`、`qoder`、`trae-cn`、`windsurf`、`augment`、`kilocode`、`ob1`、`amp`、`hermes`、`factory-droid`、`qwen`、`cline`、`roo`、`goose`、`continue`、`warp`、`openhands`、`firebender`、`zencoder`、`cortex`、`deepagents`、`crush`、`kimi-cli`、`mux`、`neovate`、`mistral-vibe`、`pochi`、`openclaude-ide`、`kode`、`mcpjam`、`bob`、`adal`、`pi`、`iflow-cli`、`command-code`
 
 ### `skm agent list`
 

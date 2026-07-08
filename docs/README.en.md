@@ -103,7 +103,7 @@ Full documentation: [docs/commands.md](commands.md)
 
 ## Supported Agents
 
-`claude-code` · `codex` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen` · `cline` · `roo` · `goose` · `continue` · `warp` · `openhands` · `firebender` · `zencoder` · `cortex` · `deepagents` · `crush` · `kimi-cli` · `mux` · `neovate` · `mistral-vibe` · `pochi` · `openclaude-ide` · `kode` · `mcpjam` · `bob` · `adal` · `pi` · `iflow-cli` · `command-code`
+`claude-code` · `codex` · `atomcode` · `gemini-cli` · `copilot-cli` · `opencode` · `cursor` · `kiro` · `trae` · `trae-cn` · `junie` · `qoder` · `codebuddy` · `openclaw` · `antigravity` · `windsurf` · `augment` · `kilocode` · `ob1` · `amp` · `hermes` · `factory-droid` · `qwen` · `cline` · `roo` · `goose` · `continue` · `warp` · `openhands` · `firebender` · `zencoder` · `cortex` · `deepagents` · `crush` · `kimi-cli` · `mux` · `neovate` · `mistral-vibe` · `pochi` · `openclaude-ide` · `kode` · `mcpjam` · `bob` · `adal` · `pi` · `iflow-cli` · `command-code`
 
 Agents not listed above can be registered manually with `skm agent add`.
 

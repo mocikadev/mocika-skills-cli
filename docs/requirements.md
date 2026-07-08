@@ -127,6 +127,7 @@ command in PATH (which)
 |---------|--------|---------|------------|
 | `claude-code` | Claude Code | `claude` | `~/.claude/skills` |
 | `codex` | Codex | `codex` | `~/.codex/skills` |
+| `atomcode` | AtomCode | `atomcode` | `~/.atomcode/skills` |
 | `gemini-cli` | Gemini CLI | `gemini` | `~/.gemini/skills` |
 | `copilot-cli` | Copilot CLI | `gh` | `~/.copilot/skills` |
 | `opencode` | OpenCode | `opencode` | `~/.config/opencode/skills`（Linux/macOS）|

@@ -27,6 +27,11 @@ pub fn definitions() -> Vec<AgentDefinition> {
             detect_command: "codex",
         },
         AgentDefinition {
+            id: "atomcode",
+            display_name: "AtomCode",
+            detect_command: "atomcode",
+        },
+        AgentDefinition {
             id: "gemini-cli",
             display_name: "Gemini CLI",
             detect_command: "gemini",
@@ -323,6 +328,7 @@ pub fn skills_dir_for(agent_id: &str) -> Result<PathBuf> {
     let path = match agent_id {
         "claude-code" => home.join(".claude").join("skills"),
         "codex" => home.join(".codex").join("skills"),
+        "atomcode" => home.join(".atomcode").join("skills"),
         "gemini-cli" => home.join(".gemini").join("skills"),
         "copilot-cli" => home.join(".copilot").join("skills"),
         "opencode" => opencode_dir()?.join("skills"),
@@ -382,6 +388,7 @@ pub fn config_dir_for(agent_id: &str) -> Result<PathBuf> {
     let path = match agent_id {
         "claude-code" => home.join(".claude"),
         "codex" => home.join(".codex"),
+        "atomcode" => home.join(".atomcode"),
         "gemini-cli" => home.join(".gemini"),
         "copilot-cli" => home.join(".copilot"),
         "opencode" => opencode_dir()?,
@@ -507,4 +514,42 @@ fn detect_command_via_shell(command: &str) -> bool {
         .status()
         .map(|status| status.success())
         .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{config_dir_for, definitions, skills_dir_for};
+
+    #[test]
+    fn definitions_include_atomcode() {
+        let atomcode = definitions()
+            .into_iter()
+            .find(|definition| definition.id == "atomcode")
+            .expect("atomcode definition should exist");
+
+        assert_eq!(atomcode.display_name, "AtomCode");
+        assert_eq!(atomcode.detect_command, "atomcode");
+    }
+
+    #[test]
+    fn skills_dir_for_returns_atomcode_skills_path() {
+        let skills_dir = skills_dir_for("atomcode").expect("atomcode skills dir should resolve");
+
+        assert!(
+            skills_dir.ends_with(".atomcode/skills"),
+            "unexpected atomcode skills dir: {}",
+            skills_dir.display()
+        );
+    }
+
+    #[test]
+    fn config_dir_for_returns_atomcode_config_path() {
+        let config_dir = config_dir_for("atomcode").expect("atomcode config dir should resolve");
+
+        assert!(
+            config_dir.ends_with(".atomcode"),
+            "unexpected atomcode config dir: {}",
+            config_dir.display()
+        );
+    }
 }
